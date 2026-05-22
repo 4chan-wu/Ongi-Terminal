@@ -1,26 +1,57 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #FFF8EC;
+  --foreground: #241A12;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-geist-sans), var(--font-sans);
+  --font-mono: var(--font-geist-mono), var(--font-mono);
+  
+  /* Brand colors matching Figma Specs */
+  --color-brand-orange: #FF8A3D;
+  --color-brand-orange-light: #FFE4D4;
+  --color-brand-orange-hover: #E57930;
+  
+  --color-brand-green: #3BA36B;
+  --color-brand-green-light: #DBF5E5;
+  --color-brand-green-hover: #318B5A;
+  
+  --color-brand-blue: #4F8FEB;
+  --color-brand-blue-light: #E8F1FD;
+  
+  --color-brand-cream: #FFF8EC;
+  --color-brand-dark: #241A12;
+  --color-brand-gray: #7A6B5E;
+  --color-brand-ivory: #FFFDF7;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* Base body styling */
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  overflow-x: hidden;
+}
+
+/* Custom scrollbars for a clean premium UI */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #FFF8EC;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #FFE4D4;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #FF8A3D;
 }
