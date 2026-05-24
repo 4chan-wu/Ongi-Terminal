@@ -17,6 +17,8 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str = ""
     LLM_MODEL_CLAUDE: str = "claude-sonnet-4-6"
     LLM_MODEL_OPENAI: str = "gpt-4o"
+    GEMINI_API_KEY: str = ""
+    LLM_MODEL_GEMINI: str = "gemini-2.5-flash"
 
     # Storage
     STORAGE_BACKEND: str = "local"

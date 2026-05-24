@@ -1,5 +1,5 @@
 """
-LLM 추상화 레이어 — LLM_PROVIDER 환경변수로 Claude/OpenAI 전환
+LLM 추상화 레이어 — LLM_PROVIDER 환경변수로 Claude/OpenAI/Gemini 전환
 """
 import json
 from abc import ABC, abstractmethod
@@ -90,9 +90,63 @@ class OpenAIProvider(LLMProvider):
         return await self.chat(messages, system=system, max_tokens=max_tokens)
 
 
+class GeminiProvider(LLMProvider):
+    def __init__(self):
+        import httpx
+        self._client = httpx.AsyncClient(timeout=30.0)
+        self._api_key = settings.GEMINI_API_KEY
+        self._model = settings.LLM_MODEL_GEMINI
+
+    async def chat(self, messages: list[dict], system: str | None = None, max_tokens: int = 1024) -> str:
+        contents = []
+        if system:
+            contents.append({"role": "user", "parts": [{"text": system}]})
+            contents.append({"role": "model", "parts": [{"text": "네, 이해했습니다."}]})
+        for m in messages:
+            role = "model" if m["role"] == "assistant" else "user"
+            content = m["content"]
+            if isinstance(content, str):
+                contents.append({"role": role, "parts": [{"text": content}]})
+            else:
+                contents.append({"role": role, "parts": content})
+
+        resp = await self._client.post(
+            f"https://generativelanguage.googleapis.com/v1beta/models/{self._model}:generateContent",
+            params={"key": self._api_key},
+            headers={"Content-Type": "application/json"},
+            json={
+                "contents": contents,
+                "generationConfig": {"maxOutputTokens": max_tokens},
+            },
+        )
+        resp.raise_for_status()
+        return resp.json()["candidates"][0]["content"]["parts"][0]["text"]
+
+    async def chat_with_image(
+        self,
+        prompt: str,
+        image_base64: str,
+        media_type: str = "image/jpeg",
+        system: str | None = None,
+        max_tokens: int = 1024,
+    ) -> str:
+        messages = [
+            {
+                "role": "user",
+                "content": [
+                    {"inline_data": {"mime_type": media_type, "data": image_base64}},
+                    {"text": prompt},
+                ],
+            }
+        ]
+        return await self.chat(messages, system=system, max_tokens=max_tokens)
+
+
 def get_llm() -> LLMProvider:
     if settings.LLM_PROVIDER == "openai":
         return OpenAIProvider()
+    if settings.LLM_PROVIDER == "gemini":
+        return GeminiProvider()
     return ClaudeProvider()
 
 
