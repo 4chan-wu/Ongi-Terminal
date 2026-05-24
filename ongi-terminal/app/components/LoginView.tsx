@@ -4,36 +4,85 @@ import React, { useState } from "react";
 import { Lock, Mail, Phone, User, Tag, Sparkles } from "lucide-react";
 
 interface LoginViewProps {
-  onLoginSuccess: (name: string, id: string, email: string, phone: string, interest: string) => void;
+  onLoginSuccess: (
+    name: string,
+    id: string,
+    email: string,
+    phone: string,
+    interest: string,
+  ) => void;
   setCurrentTab: (tab: string) => void;
 }
 
-export default function LoginView({ onLoginSuccess, setCurrentTab }: LoginViewProps) {
+export default function LoginView({
+  onLoginSuccess,
+  setCurrentTab,
+}: LoginViewProps) {
   const [isSignUp, setIsSignUp] = useState(false);
   const [id, setId] = useState("");
   const [pw, setPw] = useState("");
-  
+
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [interest, setInterest] = useState("전자기기");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (isSignUp) {
-      if (!name || !id || !pw || !phone || !email) {
-        alert("모든 필드를 입력해 주세요!");
+      if (!name || !id || !pw || !email) {
+        alert("필수 항목을 모두 입력해 주세요!");
         return;
       }
-      onLoginSuccess(name, id, email, phone, interest);
+      try {
+        const res = await fetch("http://localhost:8000/auth/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, nickname: id, password: pw }),
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          alert(err.detail || "회원가입 실패");
+          return;
+        }
+        const data = await res.json();
+        localStorage.setItem("access_token", data.access_token);
+        onLoginSuccess(id, id, email, phone, interest); //id님 이렇게 불러오려고 바꿈 (여기만)
+        setCurrentTab("home");
+      } catch {
+        alert("서버 연결 오류");
+      }
     } else {
       if (!id || !pw) {
         alert("아이디와 비밀번호를 입력해 주세요!");
         return;
       }
-      onLoginSuccess("김온기", id, "ongilove@ongi.com", "010-1234-5678", "전자기기/도서");
+      try {
+        const res = await fetch("http://localhost:8000/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email,
+            nickname: id,
+            password: pw,
+            name,
+            phone,
+          }),
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          alert(err.detail || "로그인 실패");
+          return;
+        }
+        const data = await res.json();
+        localStorage.setItem("access_token", data.access_token);
+        onLoginSuccess(name || id, id, email, phone, interest);
+        setCurrentTab("home");
+      } catch {
+        alert("서버 연결 오류");
+      }
     }
-    setCurrentTab("home");
   };
 
   return (
@@ -42,21 +91,23 @@ export default function LoginView({ onLoginSuccess, setCurrentTab }: LoginViewPr
         <div className="hidden lg:flex lg:col-span-5 h-full bg-brand-orange-light/40 p-12 flex-col justify-between min-h-[520px] relative overflow-hidden">
           <div className="absolute -top-12 -left-12 w-48 h-48 rounded-full bg-brand-orange/10 blur-2xl"></div>
           <div className="absolute -bottom-12 -right-12 w-48 h-48 rounded-full bg-brand-green/10 blur-2xl"></div>
-          
+
           <div className="space-y-4">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-orange px-3 py-1 text-xs font-bold text-white uppercase tracking-wider">
               <Sparkles className="h-3.5 w-3.5" />
               Eco Sharing
             </span>
             <h2 className="text-3xl font-extrabold leading-tight text-brand-dark">
-              동네의 온기를 나누는<br />
+              동네의 온기를 나누는
+              <br />
               자원 공유 네트워크
             </h2>
           </div>
 
           <div className="space-y-6">
             <p className="text-base font-semibold leading-relaxed text-brand-gray">
-              "나눔을 통한 포인트 적립, 기쁨 적립! 따뜻한 친환경 생활을 지금 온기 터미널과 함께 시작해 보세요."
+              "나눔을 통한 포인트 적립, 기쁨 적립! 따뜻한 친환경 생활을 지금
+              온기 터미널과 함께 시작해 보세요."
             </p>
             <div className="flex gap-2">
               <div className="h-2 w-8 rounded-full bg-brand-orange"></div>
@@ -98,7 +149,9 @@ export default function LoginView({ onLoginSuccess, setCurrentTab }: LoginViewPr
             {isSignUp && (
               <>
                 <div className="space-y-1.5">
-                  <label className="text-sm font-bold text-brand-gray">이름</label>
+                  <label className="text-sm font-bold text-brand-gray">
+                    이름
+                  </label>
                   <div className="relative">
                     <User className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-brand-gray/60" />
                     <input
@@ -112,7 +165,9 @@ export default function LoginView({ onLoginSuccess, setCurrentTab }: LoginViewPr
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-sm font-bold text-brand-gray">전화번호</label>
+                  <label className="text-sm font-bold text-brand-gray">
+                    전화번호
+                  </label>
                   <div className="relative">
                     <Phone className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-brand-gray/60" />
                     <input
@@ -126,7 +181,9 @@ export default function LoginView({ onLoginSuccess, setCurrentTab }: LoginViewPr
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-sm font-bold text-brand-gray">이메일</label>
+                  <label className="text-sm font-bold text-brand-gray">
+                    이메일
+                  </label>
                   <div className="relative">
                     <Mail className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-brand-gray/60" />
                     <input
@@ -140,7 +197,9 @@ export default function LoginView({ onLoginSuccess, setCurrentTab }: LoginViewPr
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-sm font-bold text-brand-gray">관심 분야</label>
+                  <label className="text-sm font-bold text-brand-gray">
+                    관심 분야
+                  </label>
                   <div className="relative">
                     <Tag className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-brand-gray/60" />
                     <select
@@ -160,7 +219,9 @@ export default function LoginView({ onLoginSuccess, setCurrentTab }: LoginViewPr
             )}
 
             <div className="space-y-1.5">
-              <label className="text-sm font-bold text-brand-gray">아이디</label>
+              <label className="text-sm font-bold text-brand-gray">
+                아이디
+              </label>
               <div className="relative">
                 <User className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-brand-gray/60" />
                 <input
@@ -174,7 +235,9 @@ export default function LoginView({ onLoginSuccess, setCurrentTab }: LoginViewPr
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-sm font-bold text-brand-gray">비밀번호</label>
+              <label className="text-sm font-bold text-brand-gray">
+                비밀번호
+              </label>
               <div className="relative">
                 <Lock className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-brand-gray/60" />
                 <input
