@@ -87,7 +87,11 @@ export default function SharingView({
 
       if (!res.ok) {
         const err = await res.json();
-        alert(err.detail || "QR 생성 실패");
+        alert(
+          typeof err.detail === "string"
+            ? err.detail
+            : JSON.stringify(err.detail),
+        );
         return;
       }
 
