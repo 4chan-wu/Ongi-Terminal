@@ -30,8 +30,7 @@ async def create_qr_token(
     expire_minutes: int = 30,
 ) -> tuple[QRToken, str]:
     token_str = str(uuid.uuid4())
-    expired_at = datetime.now(timezone.utc) + timedelta(minutes=expire_minutes)
-
+    expired_at = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(minutes=expire_minutes)
     qr_token = QRToken(
         token=token_str,
         user_id=user_id,
@@ -60,5 +59,5 @@ async def get_valid_token(db: AsyncSession, token_str: str) -> QRToken | None:
 
 
 async def mark_token_used(db: AsyncSession, qr: QRToken) -> None:
-    qr.used_at = datetime.now(timezone.utc)
+    qr.used_at = datetime.now(timezone.utc).replace(tzinfo=None)
     await db.flush()
