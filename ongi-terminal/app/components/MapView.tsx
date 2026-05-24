@@ -1,7 +1,16 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { MapPin, Info, ArrowRight, Sparkles, Navigation, Layers, Compass, CheckCircle } from "lucide-react";
+import {
+  MapPin,
+  Info,
+  ArrowRight,
+  Sparkles,
+  Navigation,
+  Layers,
+  Compass,
+  CheckCircle,
+} from "lucide-react";
 
 export interface Terminal {
   id: string;
@@ -28,6 +37,7 @@ export default function MapView({
   setSelectedTerminalId,
   setCurrentTab,
 }: MapViewProps) {
+  /*
   const terminals: Terminal[] = [
     {
       id: "1",
@@ -69,13 +79,45 @@ export default function MapView({
       pinBg: "bg-brand-blue"
     }
   ];
+  */
+  const [terminals, setTerminals] = useState<Terminal[]>([]); //백엔드 연동 터미널로 교체
 
-  const [activeTerminal, setActiveTerminal] = useState<Terminal>(terminals[0]);
+  useEffect(() => {
+    fetch("http://localhost:8000/terminals")
+      .then((res) => res.json())
+      .then((data) => {
+        const mapped = data.map(
+          (t: {
+            id: number;
+            name: string;
+            address: string;
+            status: string;
+          }) => ({
+            id: String(t.id),
+            name: t.name,
+            address: t.address,
+            sharingCount: 0,
+            capacity: "여유",
+            status: "smooth" as const,
+            desc: t.address,
+            lat: Math.random() * 50 + 25,
+            lng: Math.random() * 50 + 25,
+            color: "#FF8A3D",
+            pinBg: "bg-brand-orange",
+          }),
+        );
+        setTerminals(mapped);
+        if (mapped.length > 0) setActiveTerminal(mapped[0]);
+      })
+      .catch(() => console.error("터미널 불러오기 실패"));
+  }, []);
+
+  const [activeTerminal, setActiveTerminal] = useState<Terminal | null>(null);
   const [showAiPath, setShowAiPath] = useState(false);
 
   useEffect(() => {
     if (selectedTerminalId) {
-      const found = terminals.find(t => t.id === selectedTerminalId);
+      const found = terminals.find((t) => t.id === selectedTerminalId);
       if (found) {
         setActiveTerminal(found);
       }
@@ -90,7 +132,9 @@ export default function MapView({
   const handleToggleAiPath = () => {
     setShowAiPath(!showAiPath);
     if (!showAiPath) {
-      alert("🤖 AI가 최적의 자원 순환 동선을 분석했습니다:\n\n'카페 앞 터미널'에서 나눔을 수령하신 후, 도보 3분 거리의 '주민센터 터미널'에 들러 페트병을 배출하시는 동선이 가장 효율적입니다!");
+      alert(
+        "🤖 AI가 최적의 자원 순환 동선을 분석했습니다:\n\n'카페 앞 터미널'에서 나눔을 수령하신 후, 도보 3분 거리의 '주민센터 터미널'에 들러 페트병을 배출하시는 동선이 가장 효율적입니다!",
+      );
     }
   };
 
@@ -102,7 +146,8 @@ export default function MapView({
             주변 온기 터미널 확인하기
           </h2>
           <p className="max-w-xl text-brand-gray font-medium">
-            동네 곳곳 유휴 공간에 설치된 따뜻한 자원 순환 정거장의 위치와 실시간 보관함 및 수거 현황을 확인하세요.
+            동네 곳곳 유휴 공간에 설치된 따뜻한 자원 순환 정거장의 위치와 실시간
+            보관함 및 수거 현황을 확인하세요.
           </p>
         </div>
 
@@ -122,27 +167,32 @@ export default function MapView({
       </div>
 
       <div className="grid gap-8 lg:grid-cols-12 items-stretch">
-        
         <div className="lg:col-span-5 flex flex-col gap-6 justify-between">
           <div className="space-y-3">
-            <span className="text-xs font-extrabold text-brand-gray uppercase pl-1">터미널 리스트</span>
+            <span className="text-xs font-extrabold text-brand-gray uppercase pl-1">
+              터미널 리스트
+            </span>
             {terminals.map((t) => (
               <div
                 key={t.id}
                 onClick={() => handleSelectTerminal(t)}
                 className={`flex items-start gap-4 rounded-2xl border p-4 transition-all duration-300 cursor-pointer ${
-                  activeTerminal.id === t.id
+                  activeTerminal?.id === t.id
                     ? "bg-white border-brand-orange shadow-lg shadow-brand-orange/5"
                     : "bg-white border-zinc-100 hover:border-brand-orange-light"
                 }`}
               >
-                <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white font-extrabold shadow-sm ${t.pinBg}`}>
+                <div
+                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white font-extrabold shadow-sm ${t.pinBg}`}
+                >
                   {t.id}
                 </div>
-                
+
                 <div className="space-y-1.5 flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
-                    <h4 className="font-bold text-brand-dark truncate">{t.name}</h4>
+                    <h4 className="font-bold text-brand-dark truncate">
+                      {t.name}
+                    </h4>
                     {t.status === "smooth" ? (
                       <span className="shrink-0 inline-flex items-center rounded-full bg-brand-green-light px-2 py-0.5 text-[10px] font-bold text-brand-green">
                         여유
@@ -153,7 +203,9 @@ export default function MapView({
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-brand-gray truncate font-medium">{t.address}</p>
+                  <p className="text-xs text-brand-gray truncate font-medium">
+                    {t.address}
+                  </p>
                 </div>
               </div>
             ))}
@@ -161,27 +213,41 @@ export default function MapView({
 
           <div className="rounded-3xl bg-white border border-brand-orange-light p-6 shadow-xl shadow-brand-orange/5 space-y-5">
             <div className="flex items-center gap-3">
-              <div className={`flex h-10 w-10 items-center justify-center rounded-xl text-white font-extrabold ${activeTerminal.pinBg}`}>
+              <div
+                className={`flex h-10 w-10 items-center justify-center rounded-xl text-white font-extrabold ${activeTerminal?.pinBg}`}
+              >
                 <MapPin className="h-5 w-5" />
               </div>
               <div>
-                <h3 className="text-lg font-black text-brand-dark">{activeTerminal.name}</h3>
-                <span className="text-xs font-semibold text-brand-gray">실시간 상태 및 가이드</span>
+                <h3 className="text-lg font-black text-brand-dark">
+                  {activeTerminal?.name}
+                </h3>
+                <span className="text-xs font-semibold text-brand-gray">
+                  실시간 상태 및 가이드
+                </span>
               </div>
             </div>
 
             <p className="text-sm font-medium leading-relaxed text-brand-gray">
-              {activeTerminal.desc}
+              {activeTerminal?.desc}
             </p>
 
             <div className="grid grid-cols-2 gap-3 pt-2">
               <div className="rounded-2xl bg-brand-orange-light/10 border border-brand-orange-light/40 p-4">
-                <span className="text-xs font-extrabold text-brand-gray">보관 중인 나눔</span>
-                <p className="text-lg font-black text-brand-orange mt-1">{activeTerminal.sharingCount}개 대기</p>
+                <span className="text-xs font-extrabold text-brand-gray">
+                  보관 중인 나눔
+                </span>
+                <p className="text-lg font-black text-brand-orange mt-1">
+                  {activeTerminal?.sharingCount}개 대기
+                </p>
               </div>
               <div className="rounded-2xl bg-brand-green-light/10 border border-brand-green-light/40 p-4">
-                <span className="text-xs font-extrabold text-brand-gray">수거 칸 여유</span>
-                <p className="text-lg font-black text-brand-green mt-1">{activeTerminal.capacity} 여유</p>
+                <span className="text-xs font-extrabold text-brand-gray">
+                  수거 칸 여유
+                </span>
+                <p className="text-lg font-black text-brand-green mt-1">
+                  {activeTerminal?.capacity} 여유
+                </p>
               </div>
             </div>
 
@@ -197,14 +263,13 @@ export default function MapView({
 
         <div className="lg:col-span-7 flex flex-col justify-center min-h-[460px]">
           <div className="relative h-full w-full rounded-3xl bg-brand-green-light border-2 border-brand-orange-light overflow-hidden shadow-xl shadow-brand-orange/5 min-h-[500px]">
-            
             <div className="absolute inset-0 bg-[#E8F8EE] opacity-70"></div>
-            
+
             <div className="absolute top-1/4 left-0 w-full h-16 bg-white border-y border-brand-green-light transform -rotate-6"></div>
             <div className="absolute top-0 left-1/4 w-20 h-full bg-white border-x border-brand-green-light transform rotate-30"></div>
             <div className="absolute top-1/2 left-2/3 w-16 h-full bg-white border-x border-brand-green-light transform -rotate-45"></div>
             <div className="absolute bottom-1/4 left-0 w-full h-12 bg-white border-y border-brand-green-light transform rotate-12"></div>
-            
+
             <div className="absolute top-10 left-10 w-32 h-32 rounded-full bg-[#CCEED6] filter blur-xl opacity-80"></div>
             <div className="absolute bottom-10 right-10 w-44 h-44 rounded-full bg-[#CCEED6] filter blur-2xl opacity-60"></div>
 
@@ -219,18 +284,34 @@ export default function MapView({
                   strokeDasharray="10, 15"
                   className="animate-pulse"
                 />
-                <circle cx="330" cy="140" r="10" fill="#FF8A3D" opacity="0.3" className="animate-ping" />
-                <circle cx="120" cy="370" r="10" fill="#3BA36B" opacity="0.3" className="animate-ping" />
+                <circle
+                  cx="330"
+                  cy="140"
+                  r="10"
+                  fill="#FF8A3D"
+                  opacity="0.3"
+                  className="animate-ping"
+                />
+                <circle
+                  cx="120"
+                  cy="370"
+                  r="10"
+                  fill="#3BA36B"
+                  opacity="0.3"
+                  className="animate-ping"
+                />
               </svg>
             )}
 
             <div className="absolute top-6 left-6 bg-white/80 backdrop-blur-sm border border-brand-orange-light p-3 rounded-2xl flex items-center gap-2 shadow-sm z-20">
               <Compass className="h-5 w-5 text-brand-orange animate-spin-slow" />
-              <span className="text-xs font-black text-brand-dark tracking-wider">MAP VIEW</span>
+              <span className="text-xs font-black text-brand-dark tracking-wider">
+                MAP VIEW
+              </span>
             </div>
 
             {terminals.map((t) => {
-              const isActive = activeTerminal.id === t.id;
+              const isActive = activeTerminal?.id === t.id;
               return (
                 <div
                   key={t.id}
@@ -246,7 +327,7 @@ export default function MapView({
                       style={{ backgroundColor: t.color }}
                     ></div>
                   )}
-                  
+
                   <div
                     className={`flex h-10 w-10 items-center justify-center rounded-full text-white font-extrabold shadow-lg transition-transform ${
                       isActive ? "ring-4 ring-white shadow-xl" : ""
@@ -266,7 +347,9 @@ export default function MapView({
                     <span className="text-xs font-black text-brand-dark whitespace-nowrap">
                       {t.name.split(" ")[0]}
                     </span>
-                    {isActive && <CheckCircle className="h-3.5 w-3.5 text-brand-orange" />}
+                    {isActive && (
+                      <CheckCircle className="h-3.5 w-3.5 text-brand-orange" />
+                    )}
                   </div>
                 </div>
               );
@@ -278,19 +361,20 @@ export default function MapView({
                 <span>나의 위치: 햇살동 사거리</span>
               </div>
             </div>
-            
+
             {showAiPath && (
               <div className="absolute top-6 right-6 bg-brand-orange text-white px-4 py-3 rounded-2xl text-xs font-bold shadow-lg animate-fade-in flex flex-col gap-1 z-20">
                 <span className="font-extrabold flex items-center gap-1">
                   <Sparkles className="h-4 w-4" />
                   추천 순환 동선
                 </span>
-                <span className="font-semibold text-[10px] opacity-90">1호기 수령 ➔ 2호기 페트병 적립 (도보 3분)</span>
+                <span className="font-semibold text-[10px] opacity-90">
+                  1호기 수령 ➔ 2호기 페트병 적립 (도보 3분)
+                </span>
               </div>
             )}
           </div>
         </div>
-
       </div>
     </section>
   );

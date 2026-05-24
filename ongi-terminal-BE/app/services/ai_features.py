@@ -120,4 +120,4 @@ async def chat_with_bot(message: str, history: list[dict] | None = None) -> str:
     messages = list(history or [])
     messages.append({"role": "user", "content": message})
     llm = get_llm()
-    return await llm.chat(messages, system=system, max_tokens=512)
+    return await llm.chat(messages, system=system, max_tokens=2048)

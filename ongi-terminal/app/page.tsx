@@ -138,6 +138,19 @@ export default function Home() {
       .catch(() => console.error("물품 목록 불러오기 실패"));
   }, []);
 
+  useEffect(() => {
+    const token = localStorage.getItem("access_token");
+    if (!token) return;
+    fetch("http://localhost:8000/points/balance", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setUserPoints(data.balance);
+      })
+      .catch(() => console.error("포인트 불러오기 실패"));
+  }, [isLoggedIn]);
+
   // Handle Login and user updates
   const handleLoginSuccess = (
     name: string,
