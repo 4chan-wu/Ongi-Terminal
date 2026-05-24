@@ -1,12 +1,22 @@
 "use client";
 
 import React, { useState } from "react";
-import { X, Camera, MapPin, MessageSquare, Sparkles, Send, Check } from "lucide-react";
+import {
+  X,
+  Camera,
+  MapPin,
+  MessageSquare,
+  Sparkles,
+  Send,
+  Check,
+} from "lucide-react";
 import { SharingItem } from "./SharingView";
 
 interface SharingRegisterProps {
   onClose: () => void;
-  onRegister: (item: Omit<SharingItem, "id" | "status" | "owner" | "createdAt">) => void;
+  onRegister: (
+    item: Omit<SharingItem, "id" | "status" | "owner" | "createdAt">,
+  ) => void;
 }
 
 interface ChatMessage {
@@ -14,7 +24,10 @@ interface ChatMessage {
   text: string;
 }
 
-export default function SharingRegister({ onClose, onRegister }: SharingRegisterProps) {
+export default function SharingRegister({
+  onClose,
+  onRegister,
+}: SharingRegisterProps) {
   const [title, setTitle] = useState("");
   const [desc, setDesc] = useState("");
   const [reportDesc, setReportDesc] = useState("");
@@ -22,7 +35,7 @@ export default function SharingRegister({ onClose, onRegister }: SharingRegister
   const [category, setCategory] = useState("전자기기");
   const [terminalId, setTerminalId] = useState("1"); // 1: Cafe, 2: Community Center, 3: Subway
   const [imageEmoji, setImageEmoji] = useState("🎁");
-  
+
   // AI Chat states
   const [showAiHelper, setShowAiHelper] = useState(false);
   const [chatInput, setChatInput] = useState("");
@@ -35,11 +48,11 @@ export default function SharingRegister({ onClose, onRegister }: SharingRegister
   const [isAiLoading, setIsAiLoading] = useState(false);
 
   const emojisByCategory: Record<string, string[]> = {
-    "전자기기": ["🎧", "⌨️", "🖱️", "🔋", "📱", "💻", "⌚"],
-    "도서": ["📚", "📖", "✏️", "🎨", "📓"],
-    "생활용품": ["🕯️", "🏺", "☕", "☕", "⛺", "👜", "🌂"],
-    "의류": ["👕", "🧥", "👒", "👟", "🧣"],
-    "기타": ["🎁", "🧸", "🚲", "🛹", "🏸"]
+    전자기기: ["🎧", "⌨️", "🖱️", "🔋", "📱", "💻", "⌚"],
+    도서: ["📚", "📖", "✏️", "🎨", "📓"],
+    생활용품: ["🕯️", "🏺", "☕", "☕", "⛺", "👜", "🌂"],
+    의류: ["👕", "🧥", "👒", "👟", "🧣"],
+    기타: ["🎁", "🧸", "🚲", "🛹", "🏸"],
   };
 
   const handleCategoryChange = (cat: string) => {
@@ -60,7 +73,7 @@ export default function SharingRegister({ onClose, onRegister }: SharingRegister
     // Mock an advanced AI parsing process
     setTimeout(() => {
       let aiResponse = "";
-      
+
       // Basic heuristic keywords for autofill simulation
       const text = userText.toLowerCase();
       let parsedTitle = "나눔 물품";
@@ -70,38 +83,63 @@ export default function SharingRegister({ onClose, onRegister }: SharingRegister
       let parsedExplain = userText;
       let parsedTerminal = "1"; // Default Cafe
 
-      if (text.includes("에어팟") || text.includes("이어폰") || text.includes("헤드폰") || text.includes("ANC") || text.includes("소리")) {
+      if (
+        text.includes("에어팟") ||
+        text.includes("이어폰") ||
+        text.includes("헤드폰") ||
+        text.includes("ANC") ||
+        text.includes("소리")
+      ) {
         parsedTitle = "무선 노이즈캔슬링 이어폰";
         parsedCategory = "전자기기";
         parsedDesc = "훌륭한 음질과 노이즈 캔슬링을 제공하는 스마트 무선 기기";
         setImageEmoji("🎧");
         if (text.includes("단자") || text.includes("헐겁")) {
-          parsedReport = "충전 케이스 단자 부분이 간혹 헐거움 (충전은 정상 작동)";
+          parsedReport =
+            "충전 케이스 단자 부분이 간혹 헐거움 (충전은 정상 작동)";
         } else {
           parsedReport = "케이스 미세 기스 있음, 본체 정상 작동";
         }
-        parsedExplain = "이웃들과 따뜻한 음악을 함께하고 싶어 나눔합니다. 작년에 구매하였으며 소리는 매우 잘 나옵니다.";
-      } else if (text.includes("키보드") || text.includes("마우스") || text.includes("타이핑")) {
+        parsedExplain =
+          "이웃들과 따뜻한 음악을 함께하고 싶어 나눔합니다. 작년에 구매하였으며 소리는 매우 잘 나옵니다.";
+      } else if (
+        text.includes("키보드") ||
+        text.includes("마우스") ||
+        text.includes("타이핑")
+      ) {
         parsedTitle = "개발자용 기계식 키보드";
         parsedCategory = "전자기기";
         parsedDesc = "부드러운 타건감과 레트로 디자인의 무선 기계식 키보드";
         setImageEmoji("⌨️");
         parsedReport = "특정 키 캡 생활 흔적 있음, LED 등 작동 원활";
-        parsedExplain = "개발 작업 시 애용하던 키보드입니다. 이번에 장비를 교체하면서 이웃 개발자나 학생분들을 위해 기쁜 마음으로 나눔합니다.";
-      } else if (text.includes("책") || text.includes("도서") || text.includes("백과사전") || text.includes("공부")) {
+        parsedExplain =
+          "개발 작업 시 애용하던 키보드입니다. 이번에 장비를 교체하면서 이웃 개발자나 학생분들을 위해 기쁜 마음으로 나눔합니다.";
+      } else if (
+        text.includes("책") ||
+        text.includes("도서") ||
+        text.includes("백과사전") ||
+        text.includes("공부")
+      ) {
         parsedTitle = "어린이 창의력 백과사전 세트";
         parsedCategory = "도서";
         parsedDesc = "아이들의 지적 호기심과 지식 탐구를 돕는 풀컬러 과학 전집";
         setImageEmoji("📚");
         parsedReport = "1권 모서리 미세 찢어짐 외 전 권 낙서 없이 깨끗함";
-        parsedExplain = "아이가 자라면서 이제 더이상 읽지 않게 되어 동네 아이들을 위해 나눔합니다. 그림이 알차고 공부에 아주 큰 도움이 됩니다.";
-      } else if (text.includes("캠핑") || text.includes("랜턴") || text.includes("램프") || text.includes("조명")) {
+        parsedExplain =
+          "아이가 자라면서 이제 더이상 읽지 않게 되어 동네 아이들을 위해 나눔합니다. 그림이 알차고 공부에 아주 큰 도움이 됩니다.";
+      } else if (
+        text.includes("캠핑") ||
+        text.includes("랜턴") ||
+        text.includes("램프") ||
+        text.includes("조명")
+      ) {
         parsedTitle = "아날로그 클래식 캠핑 랜턴";
         parsedCategory = "생활용품";
         parsedDesc = "캠핑 감성을 더해주는 충전식 아날로그 우드 LED 램프";
         setImageEmoji("🕯️");
         parsedReport = "박스 구성품 없음, 본체 및 USB 케이블 완비";
-        parsedExplain = "캠핑 분위기를 매우 감성적으로 만들어 주는 충전식 조명입니다. 야외 활동을 사랑하시는 이웃분들이 유용하게 써주셨으면 좋겠습니다.";
+        parsedExplain =
+          "캠핑 분위기를 매우 감성적으로 만들어 주는 충전식 조명입니다. 야외 활동을 사랑하시는 이웃분들이 유용하게 써주셨으면 좋겠습니다.";
       }
 
       if (text.includes("주민센터") || text.includes("주민")) {
@@ -121,50 +159,79 @@ export default function SharingRegister({ onClose, onRegister }: SharingRegister
       setTerminalId(parsedTerminal);
 
       aiResponse = `💡 **AI 추천 정보 작성 완료!**\n\n요청하신 내용을 바탕으로 상품 상세 폼을 완벽하게 작성해 드렸습니다!\n\n* **작성된 품목**: ${parsedTitle}\n* **카테고리**: ${parsedCategory}\n* **선택된 터미널**: ${parsedTerminal === "1" ? "카페 앞" : parsedTerminal === "2" ? "주민센터" : "지하철역"}\n\n상세한 필드가 올바른지 좌측 폼에서 검토하신 후 하단의 '나눔 등록하기' 버튼을 눌러 등록을 진행해 주세요!`;
-      
+
       setChatHistory((prev) => [...prev, { sender: "ai", text: aiResponse }]);
       setIsAiLoading(false);
     }, 2000);
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !desc || !explain) {
       alert("이름, 한 줄 특징, 상세 정보는 필수 입력 사항입니다!");
       return;
     }
 
-    const terminalLocations: Record<string, string> = {
-      "1": "카페 앞 정거장",
-      "2": "주민센터 앞 정거장",
-      "3": "지하철역 앞 정거장"
-    };
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      alert("로그인이 필요합니다!");
+      return;
+    }
 
-    onRegister({
-      title,
-      desc,
-      reportDesc,
-      explain,
-      category,
-      terminalId,
-      location: terminalLocations[terminalId] || "카페 앞 정거장",
-      image: imageEmoji
-    });
-    
-    alert("나눔 물품이 온기 터미널에 성공적으로 등록되었습니다! 🎁");
-    onClose();
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("desc", desc);
+    formData.append("explain", explain);
+    formData.append("report_desc", reportDesc);
+    formData.append("terminal_id", terminalId);
+
+    try {
+      const res = await fetch("http://localhost:8000/items", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        alert(err.detail || "물품 등록 실패");
+        return;
+      }
+
+      const terminalLocations: Record<string, string> = {
+        "1": "카페 앞 정거장",
+        "2": "주민센터 앞 정거장",
+        "3": "지하철역 앞 정거장",
+      };
+
+      onRegister({
+        title,
+        desc,
+        reportDesc,
+        explain,
+        category,
+        terminalId,
+        location: terminalLocations[terminalId] || "카페 앞 정거장",
+        image: imageEmoji,
+      });
+
+      alert("나눔 물품이 온기 터미널에 성공적으로 등록되었습니다! 🎁");
+      onClose();
+    } catch {
+      alert("서버 연결 오류");
+    }
   };
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-brand-dark/50 p-4 backdrop-blur-sm animate-fade-in">
       <div className="relative w-full max-w-5xl rounded-3xl bg-white border border-brand-orange-light overflow-hidden shadow-2xl animate-scale-up max-h-[92vh] flex flex-col">
-        
         <div className="flex items-center justify-between border-b border-brand-orange-light/50 px-8 py-5 bg-brand-ivory">
           <div className="flex items-center gap-2">
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-orange text-white">
               🎁
             </span>
-            <h2 className="text-2xl font-black text-brand-dark">나눔 물품 등록하기</h2>
+            <h2 className="text-2xl font-black text-brand-dark">
+              나눔 물품 등록하기
+            </h2>
           </div>
           <button
             onClick={onClose}
@@ -175,8 +242,10 @@ export default function SharingRegister({ onClose, onRegister }: SharingRegister
         </div>
 
         <div className="flex-1 grid lg:grid-cols-12 overflow-y-auto min-h-0">
-          
-          <form onSubmit={handleFormSubmit} className="lg:col-span-7 p-8 space-y-6 overflow-y-auto">
+          <form
+            onSubmit={handleFormSubmit}
+            className="lg:col-span-7 p-8 space-y-6 overflow-y-auto"
+          >
             <div className="flex flex-col sm:flex-row gap-6 items-center border-b border-brand-orange-light/40 pb-6">
               <div className="relative h-28 w-28 rounded-3xl bg-brand-orange-light/30 border border-brand-orange-light flex items-center justify-center text-5xl shadow-inner group">
                 {imageEmoji}
@@ -185,7 +254,9 @@ export default function SharingRegister({ onClose, onRegister }: SharingRegister
                 </div>
               </div>
               <div className="space-y-2 flex-1 text-center sm:text-left">
-                <span className="text-xs font-bold text-brand-gray">물품 아이콘 선택 (카테고리 연동)</span>
+                <span className="text-xs font-bold text-brand-gray">
+                  물품 아이콘 선택 (카테고리 연동)
+                </span>
                 <div className="flex flex-wrap justify-center sm:justify-start gap-2">
                   {(emojisByCategory[category] || ["🎁"]).map((emo) => (
                     <button
@@ -207,7 +278,9 @@ export default function SharingRegister({ onClose, onRegister }: SharingRegister
 
             <div className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-sm font-bold text-brand-gray">카테고리</label>
+                <label className="text-sm font-bold text-brand-gray">
+                  카테고리
+                </label>
                 <div className="flex flex-wrap gap-2">
                   {Object.keys(emojisByCategory).map((cat) => (
                     <button
@@ -227,7 +300,9 @@ export default function SharingRegister({ onClose, onRegister }: SharingRegister
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-sm font-bold text-brand-gray">물품 이름</label>
+                <label className="text-sm font-bold text-brand-gray">
+                  물품 이름
+                </label>
                 <input
                   type="text"
                   placeholder="예: 애플 에어팟 프로 2세대"
@@ -238,7 +313,9 @@ export default function SharingRegister({ onClose, onRegister }: SharingRegister
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-sm font-bold text-brand-gray">한 줄 특징</label>
+                <label className="text-sm font-bold text-brand-gray">
+                  한 줄 특징
+                </label>
                 <input
                   type="text"
                   placeholder="예: 소리가 깨끗하고 노이즈 캔슬링이 잘 되는 상태 좋은 이어폰"
@@ -250,12 +327,29 @@ export default function SharingRegister({ onClose, onRegister }: SharingRegister
 
               {/* Terminal select */}
               <div className="space-y-1.5">
-                <label className="text-sm font-bold text-brand-gray">인수 터미널 지정</label>
+                <label className="text-sm font-bold text-brand-gray">
+                  인수 터미널 지정
+                </label>
                 <div className="grid grid-cols-3 gap-3">
                   {[
-                    { id: "1", label: "카페 앞 정거장", pin: "1", color: "text-brand-orange" },
-                    { id: "2", label: "주민센터 앞", pin: "2", color: "text-brand-green" },
-                    { id: "3", label: "지하철역 앞", pin: "3", color: "text-brand-blue" }
+                    {
+                      id: "1",
+                      label: "카페 앞 정거장",
+                      pin: "1",
+                      color: "text-brand-orange",
+                    },
+                    {
+                      id: "2",
+                      label: "주민센터 앞",
+                      pin: "2",
+                      color: "text-brand-green",
+                    },
+                    {
+                      id: "3",
+                      label: "지하철역 앞",
+                      pin: "3",
+                      color: "text-brand-blue",
+                    },
                   ].map((term) => (
                     <button
                       key={term.id}
@@ -268,14 +362,18 @@ export default function SharingRegister({ onClose, onRegister }: SharingRegister
                       }`}
                     >
                       <MapPin className={`h-5 w-5 mb-1 ${term.color}`} />
-                      <span className="text-xs font-semibold">{term.label}</span>
+                      <span className="text-xs font-semibold">
+                        {term.label}
+                      </span>
                     </button>
                   ))}
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-sm font-bold text-brand-gray">특이사항 (사용감, 흠집, 헐거움 등)</label>
+                <label className="text-sm font-bold text-brand-gray">
+                  특이사항 (사용감, 흠집, 헐거움 등)
+                </label>
                 <input
                   type="text"
                   placeholder="예: 오른쪽 이어폰 아래 미세 긁힘 있음, 박스 없음"
@@ -286,7 +384,9 @@ export default function SharingRegister({ onClose, onRegister }: SharingRegister
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-sm font-bold text-brand-gray">상세 정보</label>
+                <label className="text-sm font-bold text-brand-gray">
+                  상세 정보
+                </label>
                 <textarea
                   placeholder="물건의 구매시기, 사용 빈도, 나눔하게 된 이유 등을 자세하게 적어주세요."
                   rows={4}
@@ -319,11 +419,15 @@ export default function SharingRegister({ onClose, onRegister }: SharingRegister
             </div>
           </form>
 
-          <div className={`lg:col-span-5 border-t lg:border-t-0 lg:border-l border-brand-orange-light/50 bg-brand-orange-light/10 flex flex-col h-full min-h-[400px] lg:min-h-0 ${showAiHelper ? "block" : "hidden lg:flex"}`}>
+          <div
+            className={`lg:col-span-5 border-t lg:border-t-0 lg:border-l border-brand-orange-light/50 bg-brand-orange-light/10 flex flex-col h-full min-h-[400px] lg:min-h-0 ${showAiHelper ? "block" : "hidden lg:flex"}`}
+          >
             <div className="p-6 border-b border-brand-orange-light/40 bg-white/50 backdrop-blur-sm flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Sparkles className="h-5 w-5 text-brand-orange animate-pulse" />
-                <span className="font-extrabold text-brand-dark text-base">AI 추천 글쓰기 도우미</span>
+                <span className="font-extrabold text-brand-dark text-base">
+                  AI 추천 글쓰기 도우미
+                </span>
               </div>
               <span className="inline-flex rounded-full bg-brand-orange-light px-2.5 py-0.5 text-[10px] font-bold text-brand-orange uppercase">
                 Autofill
@@ -361,7 +465,10 @@ export default function SharingRegister({ onClose, onRegister }: SharingRegister
               )}
             </div>
 
-            <form onSubmit={handleAiChatSubmit} className="p-4 border-t border-brand-orange-light/40 bg-white/50 backdrop-blur-sm flex gap-2">
+            <form
+              onSubmit={handleAiChatSubmit}
+              className="p-4 border-t border-brand-orange-light/40 bg-white/50 backdrop-blur-sm flex gap-2"
+            >
               <input
                 type="text"
                 placeholder="예: 레트로 캠핑 랜턴 나눔할게..."
@@ -380,7 +487,6 @@ export default function SharingRegister({ onClose, onRegister }: SharingRegister
             </form>
           </div>
         </div>
-
       </div>
     </div>
   );

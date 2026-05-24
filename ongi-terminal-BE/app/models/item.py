@@ -11,6 +11,9 @@ class Item(Base):
     terminal_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("terminals.id"))
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str | None] = mapped_column(Text)
+    desc: Mapped[str | None] = mapped_column(Text)
+    explain: Mapped[str | None] = mapped_column(Text)
+    report_desc: Mapped[str | None] = mapped_column(Text)
     category: Mapped[str | None] = mapped_column(String(100))
     tags: Mapped[str | None] = mapped_column(String(500))  # comma-separated AI tags
     image_url: Mapped[str | None] = mapped_column(Text)

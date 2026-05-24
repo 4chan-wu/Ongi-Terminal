@@ -28,6 +28,9 @@ async def create_item(
     image: UploadFile | None = File(None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
+    desc: str | None = Form(None),
+    explain: str | None = Form(None),
+    report_desc: str | None = Form(None),
 ):
     image_url = None
     image_b64 = None
@@ -55,6 +58,9 @@ async def create_item(
         terminal_id=terminal_id,
         title=title,
         description=description,
+        desc=desc,
+        explain=explain,
+        report_desc=report_desc,
         category=ai["category"],
         tags=",".join(ai["tags"]),
         image_url=image_url,
