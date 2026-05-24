@@ -1,7 +1,17 @@
 "use client";
 
 import React, { useState } from "react";
-import { Search, Heart, MessageSquare, Plus, MapPin, X, QrCode, CheckCircle2, ChevronRight } from "lucide-react";
+import {
+  Search,
+  Heart,
+  MessageSquare,
+  Plus,
+  MapPin,
+  X,
+  QrCode,
+  CheckCircle2,
+  ChevronRight,
+} from "lucide-react";
 
 export interface SharingItem {
   id: string;
@@ -58,13 +68,38 @@ export default function SharingView({
     setSelectedItem(null);
   };
 
-  const handleRequestReserve = (itemId: string) => {
-    onReserveItem(itemId);
-    // Update local state in modal if active
-    if (selectedItem && selectedItem.id === itemId) {
-      setSelectedItem({ ...selectedItem, status: "reserved" });
+  const handleRequestReserve = async (itemId: string) => {
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      alert("로그인이 필요합니다!");
+      return;
     }
-    setShowQrModal(true);
+
+    try {
+      const res = await fetch(`http://localhost:8000/qr/generate/checkout`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ item_id: parseInt(itemId), terminal_id: 1 }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        alert(err.detail || "QR 생성 실패");
+        return;
+      }
+
+      const data = await res.json();
+      onReserveItem(itemId);
+      if (selectedItem && selectedItem.id === itemId) {
+        setSelectedItem({ ...selectedItem, status: "reserved" });
+      }
+      setShowQrModal(true);
+    } catch {
+      alert("서버 연결 오류");
+    }
   };
 
   const handleCancelReserve = (itemId: string) => {
@@ -83,8 +118,9 @@ export default function SharingView({
             따뜻한 이웃들의 나눔 정거장
           </h2>
           <p className="max-w-xl text-brand-gray font-medium">
-            유휴 공간에 설치된 온기 터미널에서 이웃이 나누는 정성스러운 물건들을 확인해 보세요.
-            마음에 드는 물품은 무료로 예약하고 터미널에서 찾아가실 수 있습니다.
+            유휴 공간에 설치된 온기 터미널에서 이웃이 나누는 정성스러운 물건들을
+            확인해 보세요. 마음에 드는 물품은 무료로 예약하고 터미널에서
+            찾아가실 수 있습니다.
           </p>
         </div>
 
@@ -138,9 +174,12 @@ export default function SharingView({
       {filteredItems.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-3xl border-2 border-dashed border-brand-orange-light bg-brand-ivory/50 p-20 text-center space-y-4">
           <Heart className="h-16 w-16 text-brand-orange-light animate-pulse" />
-          <h3 className="text-xl font-bold text-brand-dark">대기 중인 나눔 물품이 없습니다</h3>
+          <h3 className="text-xl font-bold text-brand-dark">
+            대기 중인 나눔 물품이 없습니다
+          </h3>
           <p className="text-brand-gray max-w-md">
-            검색어 또는 카테고리를 변경해 보시거나, 여러분의 소중한 물건을 첫 번째 나눔으로 등록해 이웃의 온기를 채워보세요!
+            검색어 또는 카테고리를 변경해 보시거나, 여러분의 소중한 물건을 첫
+            번째 나눔으로 등록해 이웃의 온기를 채워보세요!
           </p>
         </div>
       ) : (
@@ -152,7 +191,9 @@ export default function SharingView({
               className="group flex flex-col justify-between overflow-hidden rounded-3xl border border-brand-orange-light bg-white hover:-translate-y-1.5 hover:shadow-xl hover:shadow-brand-orange/5 transition-all duration-300 cursor-pointer"
             >
               <div className="relative h-56 w-full overflow-hidden bg-brand-orange-light/10 flex items-center justify-center">
-                <span className="text-6xl group-hover:scale-110 transition-transform duration-500">{item.image}</span>
+                <span className="text-6xl group-hover:scale-110 transition-transform duration-500">
+                  {item.image}
+                </span>
                 <div className="absolute top-4 left-4">
                   {item.status === "available" ? (
                     <span className="inline-flex items-center gap-1 rounded-full bg-brand-orange px-3 py-1 text-xs font-bold text-white shadow-sm shadow-brand-orange/20 animate-pulse">
@@ -176,7 +217,9 @@ export default function SharingView({
 
               <div className="flex flex-col flex-1 p-6 justify-between space-y-4">
                 <div className="space-y-2">
-                  <span className="text-xs font-extrabold text-brand-orange uppercase tracking-wider">{item.category}</span>
+                  <span className="text-xs font-extrabold text-brand-orange uppercase tracking-wider">
+                    {item.category}
+                  </span>
                   <h3 className="text-xl font-bold text-brand-dark line-clamp-1 group-hover:text-brand-orange transition-colors">
                     {item.title}
                   </h3>
@@ -190,9 +233,13 @@ export default function SharingView({
                     <div className="h-7 w-7 rounded-full bg-brand-orange-light flex items-center justify-center text-brand-orange text-[10px] font-black">
                       OWN
                     </div>
-                    <span className="text-xs font-bold text-brand-dark">{item.owner}</span>
+                    <span className="text-xs font-bold text-brand-dark">
+                      {item.owner}
+                    </span>
                   </div>
-                  <span className="text-xs font-semibold text-brand-gray">{item.createdAt}</span>
+                  <span className="text-xs font-semibold text-brand-gray">
+                    {item.createdAt}
+                  </span>
                 </div>
               </div>
             </div>
@@ -221,11 +268,17 @@ export default function SharingView({
             <div className="p-8 space-y-6">
               <div className="flex flex-wrap items-center justify-between gap-4 border-b border-brand-orange-light/40 pb-4">
                 <div>
-                  <h3 className="text-2xl font-black text-brand-dark">{selectedItem.title}</h3>
+                  <h3 className="text-2xl font-black text-brand-dark">
+                    {selectedItem.title}
+                  </h3>
                   <div className="flex items-center gap-2 mt-2">
-                    <span className="text-sm font-bold text-brand-gray">등록자: {selectedItem.owner}</span>
+                    <span className="text-sm font-bold text-brand-gray">
+                      등록자: {selectedItem.owner}
+                    </span>
                     <span className="h-1 w-1 rounded-full bg-brand-orange-light"></span>
-                    <span className="text-sm font-semibold text-brand-gray">{selectedItem.createdAt}</span>
+                    <span className="text-sm font-semibold text-brand-gray">
+                      {selectedItem.createdAt}
+                    </span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 rounded-2xl bg-brand-orange-light/30 px-4 py-2 text-sm font-extrabold text-brand-orange border border-brand-orange-light">
@@ -236,18 +289,30 @@ export default function SharingView({
 
               <div className="space-y-4">
                 <div className="rounded-2xl bg-brand-ivory p-4 border border-brand-orange-light/50">
-                  <span className="text-xs font-extrabold text-brand-orange uppercase">한줄 특징</span>
-                  <p className="text-base font-semibold text-brand-dark mt-1 leading-relaxed">{selectedItem.desc}</p>
+                  <span className="text-xs font-extrabold text-brand-orange uppercase">
+                    한줄 특징
+                  </span>
+                  <p className="text-base font-semibold text-brand-dark mt-1 leading-relaxed">
+                    {selectedItem.desc}
+                  </p>
                 </div>
 
                 <div className="space-y-1.5">
-                  <h4 className="text-sm font-bold text-brand-gray">⚠️ 특이사항 및 사용감</h4>
-                  <p className="text-sm font-medium text-brand-dark leading-relaxed pl-1">{selectedItem.reportDesc || "없음"}</p>
+                  <h4 className="text-sm font-bold text-brand-gray">
+                    ⚠️ 특이사항 및 사용감
+                  </h4>
+                  <p className="text-sm font-medium text-brand-dark leading-relaxed pl-1">
+                    {selectedItem.reportDesc || "없음"}
+                  </p>
                 </div>
 
                 <div className="space-y-1.5">
-                  <h4 className="text-sm font-bold text-brand-gray">📝 상세 설명</h4>
-                  <p className="text-sm font-medium text-brand-dark leading-relaxed pl-1">{selectedItem.explain || "상세 정보가 없습니다."}</p>
+                  <h4 className="text-sm font-bold text-brand-gray">
+                    📝 상세 설명
+                  </h4>
+                  <p className="text-sm font-medium text-brand-dark leading-relaxed pl-1">
+                    {selectedItem.explain || "상세 정보가 없습니다."}
+                  </p>
                 </div>
               </div>
 
@@ -301,8 +366,12 @@ export default function SharingView({
               <span className="inline-flex items-center gap-1 rounded-full bg-brand-orange-light text-brand-orange px-3 py-1 text-xs font-bold uppercase">
                 Receipt QR
               </span>
-              <h3 className="text-xl font-black text-brand-dark">보관함 인수증</h3>
-              <p className="text-xs font-medium text-brand-gray">무인 캐비닛에서 QR코드를 스캔해 수령하세요.</p>
+              <h3 className="text-xl font-black text-brand-dark">
+                보관함 인수증
+              </h3>
+              <p className="text-xs font-medium text-brand-gray">
+                무인 캐비닛에서 QR코드를 스캔해 수령하세요.
+              </p>
             </div>
 
             <div className="mx-auto flex h-48 w-48 items-center justify-center rounded-2xl bg-brand-ivory border-2 border-brand-orange-light/60 p-4 shadow-inner relative overflow-hidden">
@@ -326,7 +395,9 @@ export default function SharingView({
             <div className="rounded-2xl bg-brand-orange-light/10 border border-brand-orange-light/40 p-4 space-y-2 text-left text-sm font-semibold">
               <div className="flex justify-between">
                 <span className="text-brand-gray">물품명</span>
-                <span className="text-brand-dark truncate max-w-[160px]">{selectedItem.title}</span>
+                <span className="text-brand-dark truncate max-w-[160px]">
+                  {selectedItem.title}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-brand-gray">인수 위치</span>
@@ -338,7 +409,9 @@ export default function SharingView({
               </div>
               <div className="flex justify-between">
                 <span className="text-brand-gray">인증 비밀번호</span>
-                <span className="text-brand-dark font-mono font-bold tracking-widest">3829</span>
+                <span className="text-brand-dark font-mono font-bold tracking-widest">
+                  3829
+                </span>
               </div>
             </div>
 
