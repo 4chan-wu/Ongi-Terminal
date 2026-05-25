@@ -48,14 +48,18 @@ async def generate_checkout(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    result = await db.execute(select(Item).where(Item.id == body.item_id, Item.status == "stored"))
+    result = await db.execute(
+        select(Item).where(
+            Item.id == body.item_id,
+            Item.status.in_(["registered", "stored"])  # ← .in_() 메서드 사용
+        )
+    )
     item = result.scalar_one_or_none()
     if not item:
-        raise HTTPException(status_code=404, detail="보관 중인 물품을 찾을 수 없습니다")
+        raise HTTPException(status_code=404, detail="신청 가능한 물품을 찾을 수 없습니다")
 
     qr, img = await create_qr_token(db, current_user.id, "item_checkout", body.item_id, body.terminal_id)
     return QRTokenOut(token=qr.token, qr_type=qr.qr_type, expired_at=qr.expired_at, qr_image_base64=img)
-
 
 @router.post("/verify", response_model=QRVerifyResult)
 async def verify_qr(
