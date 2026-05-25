@@ -180,7 +180,7 @@ export default function SharingRegister({
       });
 
       alert("나눔 물품이 온기 터미널에 성공적으로 등록되었습니다! 🎁");
-      onClose();
+      window.location.reload();
     } catch {
       alert("서버 연결 오류");
     }

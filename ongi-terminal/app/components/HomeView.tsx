@@ -30,8 +30,8 @@ export default function HomeView({
         <div className="space-y-10 lg:col-span-7">
           <div className="space-y-6">
             <h1 className="text-4xl font-extrabold leading-[1.2] tracking-tight text-brand-dark sm:text-5xl md:text-6xl">
-              동네의 <span className="text-brand-orange underline decoration-brand-orange-light decoration-wavy underline-offset-8">온기</span>로<br />
-              자원을 다시 달리게 하는 정거장
+              동네의 <span className="text-brand-orange">온기</span>로<br />
+              자원을 다시 달리게.
             </h1>
             <p className="max-w-2xl text-lg md:text-xl font-medium leading-relaxed text-brand-gray">
               유휴 공간에 설치된 무인 캐비닛에서 이웃과 물건을 무료로 나누고,<br className="hidden sm:inline" />

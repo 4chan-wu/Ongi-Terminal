@@ -13,6 +13,7 @@ import {
   ShoppingBag,
   Gift,
   X,
+  Trash2,
 } from "lucide-react";
 import { SharingItem } from "./SharingView";
 
@@ -30,6 +31,7 @@ interface MyPageViewProps {
   onCancelReservation: (itemId: string) => void;
   onLogout: () => void;
   onUsePoints: (points: number) => void;
+  onDeleteItem: (itemId: string) => void;
 }
 
 export default function MyPageView({
@@ -40,6 +42,7 @@ export default function MyPageView({
   onCancelReservation,
   onLogout,
   onUsePoints,
+  onDeleteItem,
 }: MyPageViewProps) {
   const [recyclingHistory, setRecyclingHistory] = useState<
     { id: string; date: string; item: string; points: number }[]
@@ -316,9 +319,18 @@ export default function MyPageView({
                           </span>
                         </div>
                       </div>
-                      <span className="shrink-0 inline-flex items-center rounded-full bg-brand-orange px-2.5 py-0.5 text-[10px] font-bold text-white">
-                        대기중
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="shrink-0 inline-flex items-center rounded-full bg-brand-orange px-2.5 py-0.5 text-[10px] font-bold text-white">
+                          대기중
+                        </span>
+                        <button
+                          onClick={() => onDeleteItem(item.id)}
+                          className="h-8 w-8 flex items-center justify-center rounded-xl border border-red-200 text-red-500 hover:bg-red-50 transition-all cursor-pointer"
+                          title="삭제"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
                     </div>
                   ))
                 )}

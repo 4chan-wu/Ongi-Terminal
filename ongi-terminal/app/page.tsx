@@ -117,12 +117,15 @@ export default function Home() {
             status: string;
             terminal_id: number;
             donor_id: number;
+            desc?: string;
+            explain?: string;
+            report_desc?: string;
           }) => ({
             id: String(item.id),
             title: item.title,
-            desc: item.description || "",
-            reportDesc: "",
-            explain: "",
+            desc: item.desc || item.description || "",
+            reportDesc: item.report_desc || "",
+            explain: item.explain || "",
             location: `터미널 ${item.terminal_id}`,
             terminalId: String(item.terminal_id),
             status:
@@ -132,7 +135,16 @@ export default function Home() {
                   ? "completed"
                   : "available",
             category: item.category || "기타",
-            image: "🎁",
+            image:
+              item.category === "전자기기"
+                ? "🎧"
+                : item.category === "도서"
+                  ? "📚"
+                  : item.category === "생활용품"
+                    ? "🕯️"
+                    : item.category === "의류"
+                      ? "👕"
+                      : "🎁",
             owner: `사용자 ${item.donor_id}`,
             createdAt: new Date().toISOString().split("T")[0],
           }),
@@ -195,17 +207,28 @@ export default function Home() {
             terminal_id: number;
             status: string;
             donor_id: number;
+            explain?: string;
+            report_desc?: string;
           }) => ({
             id: String(item.id),
             title: item.title,
             desc: item.desc || "",
-            reportDesc: "",
-            explain: "",
+            reportDesc: item.report_desc || "",
+            explain: item.explain || "",
             location: `터미널 ${item.terminal_id}`,
             terminalId: String(item.terminal_id),
             status: "available" as const,
             category: item.category || "기타",
-            image: "🎁",
+            image:
+              item.category === "전자기기"
+                ? "🎧"
+                : item.category === "도서"
+                  ? "📚"
+                  : item.category === "생활용품"
+                    ? "🕯️"
+                    : item.category === "의류"
+                      ? "👕"
+                      : "🎁",
             owner: userProfile.name,
             createdAt: new Date().toISOString().split("T")[0],
           }),
@@ -290,6 +313,43 @@ export default function Home() {
       createdAt: new Date().toISOString().split("T")[0],
     };
     setItems((prevItems) => [formattedItem, ...prevItems]);
+    if (isLoggedIn) {
+      setUserRegisteredItems((prev) => [formattedItem, ...prev]);
+    }
+  };
+
+  const handleDeleteItem = async (itemId: string) => {
+    if (!confirm("정말 이 물품 나눔을 삭제하시겠습니까?")) return;
+
+    if (itemId.startsWith("sh-")) {
+      setItems((prev) => prev.filter((item) => item.id !== itemId));
+      setUserRegisteredItems((prev) => prev.filter((item) => item.id !== itemId));
+      alert("물품 나눔이 삭제되었습니다.");
+      return;
+    }
+
+    const token = localStorage.getItem("access_token");
+    if (!token) return;
+
+    try {
+      const res = await fetch(`http://localhost:8000/items/${itemId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) {
+        setItems((prev) => prev.filter((item) => item.id !== itemId));
+        setUserRegisteredItems((prev) => prev.filter((item) => item.id !== itemId));
+        alert("물품 나눔이 삭제되었습니다.");
+        return;
+      }
+
+      alert("물품 나눔이 성공적으로 삭제되었습니다.");
+      setItems((prev) => prev.filter((item) => item.id !== itemId));
+      setUserRegisteredItems((prev) => prev.filter((item) => item.id !== itemId));
+    } catch {
+      alert("서버 연결 오류");
+    }
   };
 
   const handleAddPoints = (points: number) => {
@@ -382,6 +442,7 @@ export default function Home() {
             onCancelReservation={handleCancelReservation}
             onLogout={handleLogout}
             onUsePoints={handleUsePoints}
+            onDeleteItem={handleDeleteItem}
           />
         )}
 
