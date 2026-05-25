@@ -34,9 +34,11 @@ export default function Navbar({
           className="flex cursor-pointer items-center gap-3 active:scale-95 transition-transform"
           onClick={() => setCurrentTab("home")}
         >
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-orange-light text-brand-orange font-bold text-lg shadow-sm shadow-brand-orange/10">
-            로고
-          </div>
+          <img
+            src="/logo.png"
+            alt="온기 터미널 로고"
+            className="h-10 w-10 object-contain rounded-lg shadow-sm shadow-brand-orange/10"
+          />
           <span className="text-xl font-bold tracking-tight text-brand-dark sm:text-2xl">
             온기 터미널
           </span>

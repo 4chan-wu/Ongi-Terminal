@@ -369,6 +369,7 @@ export default function Home() {
             selectedTerminalId={selectedTerminalId}
             setSelectedTerminalId={setSelectedTerminalId}
             setCurrentTab={setCurrentTab}
+            items={items}
           />
         )}
 
