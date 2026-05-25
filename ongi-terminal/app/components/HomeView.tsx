@@ -93,7 +93,7 @@ export default function HomeView({
               <div className="mt-4">
                 <span className="text-sm font-semibold text-brand-gray">내 포인트</span>
                 <p className="text-xl sm:text-2xl font-extrabold text-brand-orange mt-1">
-                  {userPoints.toLocaleString()}P
+                  {(userPoints ?? 0).toLocaleString()}P
                 </p>
               </div>
             </div>
