@@ -8,7 +8,8 @@ from app.core.deps import get_current_user
 from app.models.user import User, UserInterest
 from app.models.item import Item
 from app.schemas.item import AIClassifyResult
-from app.services.ai_features import classify_item, classify_item_with_image, recommend_items, chat_with_bot
+from app.services.ai_features import classify_item, classify_item_with_image, recommend_items, chat_with_bot, generate_sharing_copy
+from app.services.llm_service import LLMServiceError
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/ai", tags=["ai"])
@@ -21,6 +22,19 @@ class ChatMessage(BaseModel):
 
 class ChatResponse(BaseModel):
     reply: str
+
+
+class SharingHelperRequest(BaseModel):
+    message: str
+
+
+class SharingHelperResponse(BaseModel):
+    title: str
+    category: str
+    desc: str
+    report_desc: str
+    explain: str
+    terminal_id: str
 
 
 @router.post("/classify", response_model=AIClassifyResult)
@@ -62,5 +76,17 @@ async def recommend(
 
 @router.post("/chat", response_model=ChatResponse)
 async def chat(body: ChatMessage, _=Depends(get_current_user)):
-    reply = await chat_with_bot(body.message, body.history)
-    return ChatResponse(reply=reply)
+    try:
+        reply = await chat_with_bot(body.message, body.history)
+        return ChatResponse(reply=reply)
+    except LLMServiceError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+
+@router.post("/sharing-helper", response_model=SharingHelperResponse)
+async def sharing_helper(body: SharingHelperRequest, _=Depends(get_current_user)):
+    try:
+        result = await generate_sharing_copy(body.message)
+        return SharingHelperResponse(**result)
+    except LLMServiceError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc

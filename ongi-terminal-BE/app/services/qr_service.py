@@ -10,7 +10,7 @@ from sqlalchemy import select
 from app.models.qr_token import QRToken
 
 
-def _generate_qr_image(data: str) -> str:
+def generate_qr_image(data: str) -> str:
     """QR 데이터를 base64 PNG 이미지로 변환"""
     qr = qrcode.QRCode(box_size=10, border=4)
     qr.add_data(data)
@@ -42,7 +42,7 @@ async def create_qr_token(
     db.add(qr_token)
     await db.flush()
 
-    qr_image = _generate_qr_image(token_str)
+    qr_image = generate_qr_image(token_str)
     return qr_token, qr_image
 
 

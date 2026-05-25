@@ -8,7 +8,6 @@ import {
   MessageSquare,
   Sparkles,
   Send,
-  Check,
 } from "lucide-react";
 import { SharingItem } from "./SharingView";
 
@@ -50,7 +49,7 @@ export default function SharingRegister({
   const emojisByCategory: Record<string, string[]> = {
     전자기기: ["🎧", "⌨️", "🖱️", "🔋", "📱", "💻", "⌚"],
     도서: ["📚", "📖", "✏️", "🎨", "📓"],
-    생활용품: ["🕯️", "🏺", "☕", "☕", "⛺", "👜", "🌂"],
+    생활용품: ["🕯️", "🏺", "☕", "🪴", "⛺", "👜", "🌂"],
     의류: ["👕", "🧥", "👒", "👟", "🧣"],
     기타: ["🎁", "🧸", "🚲", "🛹", "🏸"],
   };
@@ -61,7 +60,7 @@ export default function SharingRegister({
     setImageEmoji(options[0]);
   };
 
-  const handleAiChatSubmit = (e: React.FormEvent) => {
+  const handleAiChatSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!chatInput.trim()) return;
 
@@ -70,99 +69,67 @@ export default function SharingRegister({
     setChatInput("");
     setIsAiLoading(true);
 
-    // Mock an advanced AI parsing process
-    setTimeout(() => {
-      let aiResponse = "";
+    try {
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        setChatHistory((prev) => [
+          ...prev,
+          { sender: "ai", text: "로그인 후 Gemini 글쓰기 도우미를 사용할 수 있습니다." },
+        ]);
+        return;
+      }
 
-      // Basic heuristic keywords for autofill simulation
-      const text = userText.toLowerCase();
-      let parsedTitle = "나눔 물품";
-      let parsedCategory = "기타";
-      let parsedDesc = "이웃과 나누고 싶은 유용한 물품";
-      let parsedReport = "상태 양호";
-      let parsedExplain = userText;
-      let parsedTerminal = "1"; // Default Cafe
+      const res = await fetch("http://localhost:8000/ai/sharing-helper", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ message: userText }),
+      });
 
-      if (
-        text.includes("에어팟") ||
-        text.includes("이어폰") ||
-        text.includes("헤드폰") ||
-        text.includes("ANC") ||
-        text.includes("소리")
-      ) {
-        parsedTitle = "무선 노이즈캔슬링 이어폰";
-        parsedCategory = "전자기기";
-        parsedDesc = "훌륭한 음질과 노이즈 캔슬링을 제공하는 스마트 무선 기기";
-        setImageEmoji("🎧");
-        if (text.includes("단자") || text.includes("헐겁")) {
-          parsedReport =
-            "충전 케이스 단자 부분이 간혹 헐거움 (충전은 정상 작동)";
-        } else {
-          parsedReport = "케이스 미세 기스 있음, 본체 정상 작동";
+      if (!res.ok) {
+        let errorMessage = "Gemini 글쓰기 도우미 응답을 가져오지 못했습니다.";
+        try {
+          const err = await res.json();
+          if (typeof err.detail === "string") {
+            errorMessage = err.detail;
+          }
+        } catch {
+          // ignore parse failure and keep default message
         }
-        parsedExplain =
-          "이웃들과 따뜻한 음악을 함께하고 싶어 나눔합니다. 작년에 구매하였으며 소리는 매우 잘 나옵니다.";
-      } else if (
-        text.includes("키보드") ||
-        text.includes("마우스") ||
-        text.includes("타이핑")
-      ) {
-        parsedTitle = "개발자용 기계식 키보드";
-        parsedCategory = "전자기기";
-        parsedDesc = "부드러운 타건감과 레트로 디자인의 무선 기계식 키보드";
-        setImageEmoji("⌨️");
-        parsedReport = "특정 키 캡 생활 흔적 있음, LED 등 작동 원활";
-        parsedExplain =
-          "개발 작업 시 애용하던 키보드입니다. 이번에 장비를 교체하면서 이웃 개발자나 학생분들을 위해 기쁜 마음으로 나눔합니다.";
-      } else if (
-        text.includes("책") ||
-        text.includes("도서") ||
-        text.includes("백과사전") ||
-        text.includes("공부")
-      ) {
-        parsedTitle = "어린이 창의력 백과사전 세트";
-        parsedCategory = "도서";
-        parsedDesc = "아이들의 지적 호기심과 지식 탐구를 돕는 풀컬러 과학 전집";
-        setImageEmoji("📚");
-        parsedReport = "1권 모서리 미세 찢어짐 외 전 권 낙서 없이 깨끗함";
-        parsedExplain =
-          "아이가 자라면서 이제 더이상 읽지 않게 되어 동네 아이들을 위해 나눔합니다. 그림이 알차고 공부에 아주 큰 도움이 됩니다.";
-      } else if (
-        text.includes("캠핑") ||
-        text.includes("랜턴") ||
-        text.includes("램프") ||
-        text.includes("조명")
-      ) {
-        parsedTitle = "아날로그 클래식 캠핑 랜턴";
-        parsedCategory = "생활용품";
-        parsedDesc = "캠핑 감성을 더해주는 충전식 아날로그 우드 LED 램프";
-        setImageEmoji("🕯️");
-        parsedReport = "박스 구성품 없음, 본체 및 USB 케이블 완비";
-        parsedExplain =
-          "캠핑 분위기를 매우 감성적으로 만들어 주는 충전식 조명입니다. 야외 활동을 사랑하시는 이웃분들이 유용하게 써주셨으면 좋겠습니다.";
+        setChatHistory((prev) => [...prev, { sender: "ai", text: errorMessage }]);
+        return;
       }
 
-      if (text.includes("주민센터") || text.includes("주민")) {
-        parsedTerminal = "2";
-      } else if (text.includes("지하철") || text.includes("역")) {
-        parsedTerminal = "3";
-      } else if (text.includes("카페")) {
-        parsedTerminal = "1";
-      }
+      const data = await res.json();
+      handleCategoryChange(data.category || "기타");
+      setTitle(data.title || "");
+      setDesc(data.desc || "");
+      setReportDesc(data.report_desc || "");
+      setExplain(data.explain || "");
+      setTerminalId(data.terminal_id || "1");
 
-      // Auto-fill values
-      setTitle(parsedTitle);
-      setCategory(parsedCategory);
-      setDesc(parsedDesc);
-      setReportDesc(parsedReport);
-      setExplain(parsedExplain);
-      setTerminalId(parsedTerminal);
+      const terminalLabel =
+        data.terminal_id === "2"
+          ? "주민센터 앞"
+          : data.terminal_id === "3"
+            ? "지하철역 앞"
+            : "카페 앞 정거장";
 
-      aiResponse = `💡 **AI 추천 정보 작성 완료!**\n\n요청하신 내용을 바탕으로 상품 상세 폼을 완벽하게 작성해 드렸습니다!\n\n* **작성된 품목**: ${parsedTitle}\n* **카테고리**: ${parsedCategory}\n* **선택된 터미널**: ${parsedTerminal === "1" ? "카페 앞" : parsedTerminal === "2" ? "주민센터" : "지하철역"}\n\n상세한 필드가 올바른지 좌측 폼에서 검토하신 후 하단의 '나눔 등록하기' 버튼을 눌러 등록을 진행해 주세요!`;
-
+      const aiResponse = `Gemini가 등록 정보를 작성했습니다.\n\n물품명: ${data.title}\n카테고리: ${data.category}\n터미널: ${terminalLabel}\n\n왼쪽 폼을 검토한 뒤 바로 등록하시면 됩니다.`;
       setChatHistory((prev) => [...prev, { sender: "ai", text: aiResponse }]);
+    } catch {
+      setChatHistory((prev) => [
+        ...prev,
+        {
+          sender: "ai",
+          text: "Gemini 글쓰기 도우미 서버에 연결하지 못했습니다. 백엔드 서버 상태를 확인해 주세요.",
+        },
+      ]);
+    } finally {
       setIsAiLoading(false);
-    }, 2000);
+    }
   };
 
   const handleFormSubmit = async (e: React.FormEvent) => {

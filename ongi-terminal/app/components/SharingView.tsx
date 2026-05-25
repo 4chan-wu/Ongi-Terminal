@@ -47,6 +47,10 @@ export default function SharingView({
   const [selectedCategory, setSelectedCategory] = useState("전체");
   const [selectedItem, setSelectedItem] = useState<SharingItem | null>(null);
   const [showQrModal, setShowQrModal] = useState(false);
+  const [qrImageBase64, setQrImageBase64] = useState<string | null>(null);
+  const [qrToken, setQrToken] = useState<string | null>(null);
+  const [qrExpiredAt, setQrExpiredAt] = useState<string | null>(null);
+  const [isLoadingQr, setIsLoadingQr] = useState(false);
 
   const categories = ["전체", "전자기기", "도서", "생활용품", "의류", "기타"];
 
@@ -71,10 +75,11 @@ export default function SharingView({
   const handleRequestReserve = async (itemId: string) => {
     const token = localStorage.getItem("access_token");
     if (!token) {
-      alert("로그인이 필요합니다!");
+      alert("로그인이 필요합니다.");
       return;
     }
 
+    setIsLoadingQr(true);
     try {
       const res = await fetch(`http://localhost:8000/qr/generate/checkout`, {
         method: "POST",
@@ -96,6 +101,9 @@ export default function SharingView({
       }
 
       const data = await res.json();
+      setQrImageBase64(data.qr_image_base64 ?? null);
+      setQrToken(data.token ?? null);
+      setQrExpiredAt(data.expired_at ?? null);
       onReserveItem(itemId);
       if (selectedItem && selectedItem.id === itemId) {
         setSelectedItem({ ...selectedItem, status: "reserved" });
@@ -103,6 +111,17 @@ export default function SharingView({
       setShowQrModal(true);
     } catch {
       alert("서버 연결 오류");
+    } finally {
+      setIsLoadingQr(false);
+    }
+  };
+
+  const handleShowSavedQr = () => {
+    // 이미 발급된 QR이 있으면 바로 모달 오픈, 없으면 새로 발급
+    if (qrImageBase64) {
+      setShowQrModal(true);
+    } else if (selectedItem) {
+      handleRequestReserve(selectedItem.id);
     }
   };
 
@@ -331,11 +350,12 @@ export default function SharingView({
                 ) : selectedItem.status === "reserved" ? (
                   <div className="flex-1 flex flex-col sm:flex-row gap-3">
                     <button
-                      onClick={() => setShowQrModal(true)}
-                      className="flex-1 flex h-14 items-center justify-center gap-2 rounded-2xl bg-amber-500 text-lg font-bold text-white shadow-lg shadow-amber-500/20 hover:bg-amber-600 transition-all"
+                      onClick={handleShowSavedQr}
+                      disabled={isLoadingQr}
+                      className="flex-1 flex h-14 items-center justify-center gap-2 rounded-2xl bg-amber-500 text-lg font-bold text-white shadow-lg shadow-amber-500/20 hover:bg-amber-600 disabled:opacity-60 transition-all"
                     >
                       <QrCode className="h-5 w-5" />
-                      QR 인수코드 확인
+                      {isLoadingQr ? "QR 발급 중..." : "QR 인수코드 확인"}
                     </button>
                     <button
                       onClick={() => handleCancelReserve(selectedItem.id)}
@@ -375,22 +395,21 @@ export default function SharingView({
               </p>
             </div>
 
-            <div className="mx-auto flex h-48 w-48 items-center justify-center rounded-2xl bg-brand-ivory border-2 border-brand-orange-light/60 p-4 shadow-inner relative overflow-hidden">
-              <div className="absolute inset-4 border-4 border-brand-dark flex flex-col justify-between p-1 select-none pointer-events-none">
-                <div className="flex justify-between">
-                  <div className="h-6 w-6 bg-brand-dark"></div>
-                  <div className="h-6 w-6 bg-brand-dark"></div>
+            <div className="mx-auto flex items-center justify-center rounded-2xl bg-brand-ivory border-2 border-brand-orange-light/60 p-3 shadow-inner">
+              {qrImageBase64 ? (
+                <img
+                  src={`data:image/png;base64,${qrImageBase64}`}
+                  alt="QR 인수코드"
+                  className="h-48 w-48 object-contain"
+                />
+              ) : (
+                <div className="h-48 w-48 flex flex-col items-center justify-center gap-3 text-brand-gray">
+                  <QrCode className="h-16 w-16 text-brand-orange-light" />
+                  <span className="text-xs font-semibold text-center">
+                    QR 코드를 불러오는 중...
+                  </span>
                 </div>
-                <div className="flex flex-col gap-1 items-center justify-center py-2">
-                  <div className="h-1.5 w-full bg-brand-dark"></div>
-                  <div className="h-1.5 w-1/2 bg-brand-dark align-left"></div>
-                  <div className="h-1.5 w-3/4 bg-brand-dark"></div>
-                </div>
-                <div className="flex justify-between items-end">
-                  <div className="h-6 w-6 bg-brand-dark"></div>
-                  <div className="h-6 w-4 bg-brand-dark"></div>
-                </div>
-              </div>
+              )}
             </div>
 
             <div className="rounded-2xl bg-brand-orange-light/10 border border-brand-orange-light/40 p-4 space-y-2 text-left text-sm font-semibold">
@@ -404,16 +423,27 @@ export default function SharingView({
                 <span className="text-brand-gray">인수 위치</span>
                 <span className="text-brand-dark">{selectedItem.location}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-brand-gray">보관함 번호</span>
-                <span className="text-brand-orange font-bold">C-04호기</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-brand-gray">인증 비밀번호</span>
-                <span className="text-brand-dark font-mono font-bold tracking-widest">
-                  3829
-                </span>
-              </div>
+              {qrToken && (
+                <div className="flex justify-between">
+                  <span className="text-brand-gray">토큰 ID</span>
+                  <span className="text-brand-dark font-mono text-xs truncate max-w-[160px]">
+                    {qrToken.slice(0, 8)}...
+                  </span>
+                </div>
+              )}
+              {qrExpiredAt && (
+                <div className="flex justify-between">
+                  <span className="text-brand-gray">유효 기한</span>
+                  <span className="text-brand-orange font-bold text-xs">
+                    {new Date(qrExpiredAt).toLocaleString("ko-KR", {
+                      month: "2-digit",
+                      day: "2-digit",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                </div>
+              )}
             </div>
 
             <button

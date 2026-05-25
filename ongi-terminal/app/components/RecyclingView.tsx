@@ -33,6 +33,49 @@ export default function RecyclingView({
   const [chatInput, setChatInput] = useState("");
   const [isQrScanned, setIsQrScanned] = useState(false);
 
+  const [membershipQrImage, setMembershipQrImage] = useState<string | null>(null);
+  const [membershipQrLoading, setMembershipQrLoading] = useState<boolean>(false);
+  const [userName, setUserName] = useState<string>("온기 회원");
+  const [userPhone, setUserPhone] = useState<string>("");
+
+  const fetchMembershipQr = async () => {
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
+    
+    setMembershipQrLoading(true);
+    try {
+      // 1. Fetch QR
+      const resQr = await fetch("http://localhost:8000/qr/membership", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (resQr.ok) {
+        const dataQr = await resQr.json();
+        setMembershipQrImage(dataQr.qr_image_base64);
+      }
+
+      // 2. Fetch User Profile
+      const resUser = await fetch("http://localhost:8000/users/me", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (resUser.ok) {
+        const dataUser = await resUser.json();
+        setUserName(dataUser.nickname || "온기 회원");
+        setUserPhone(dataUser.email || "");
+      }
+    } catch (err) {
+      console.error("멤버십 QR 또는 회원 정보 불러오기 실패", err);
+    } finally {
+      setMembershipQrLoading(false);
+    }
+  };
+
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([
     {
       sender: "ai",
@@ -52,6 +95,14 @@ export default function RecyclingView({
 
     try {
       const token = localStorage.getItem("access_token");
+      if (!token) {
+        setChatHistory((prev) => [
+          ...prev,
+          { sender: "ai", text: "로그인 후 Gemini 상담사를 사용할 수 있습니다." },
+        ]);
+        return;
+      }
+
       const res = await fetch("http://localhost:8000/ai/chat", {
         method: "POST",
         headers: {
@@ -62,19 +113,34 @@ export default function RecyclingView({
       });
 
       if (!res.ok) {
+        let errorMessage = "Gemini 상담 응답을 가져오지 못했습니다.";
+        try {
+          const err = await res.json();
+          if (typeof err.detail === "string") {
+            errorMessage = err.detail;
+          }
+        } catch {
+          // ignore parse failure and keep default message
+        }
         setChatHistory((prev) => [
           ...prev,
-          { sender: "ai", text: "AI 응답 오류가 발생했습니다." },
+          { sender: "ai", text: errorMessage },
         ]);
         return;
       }
 
       const data = await res.json();
-      setChatHistory((prev) => [...prev, { sender: "ai", text: data.reply }]);
+      setChatHistory((prev) => [
+        ...prev,
+        { sender: "ai", text: data.reply || "Gemini 응답이 비어 있습니다." },
+      ]);
     } catch {
       setChatHistory((prev) => [
         ...prev,
-        { sender: "ai", text: "서버 연결 오류가 발생했습니다." },
+        {
+          sender: "ai",
+          text: "Gemini 상담 서버에 연결하지 못했습니다. 백엔드 서버와 네트워크 상태를 확인해 주세요.",
+        },
       ]);
     } finally {
       setIsAiLoading(false);
@@ -111,7 +177,10 @@ export default function RecyclingView({
 
         <div className="flex gap-3">
           <button
-            onClick={() => setShowQrModal(true)}
+            onClick={() => {
+              setShowQrModal(true);
+              fetchMembershipQr();
+            }}
             className="flex h-12 items-center justify-center gap-2 rounded-full bg-brand-orange px-6 font-bold text-white shadow-lg shadow-brand-orange/15 hover:bg-brand-orange-hover hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300"
           >
             <QrCode className="h-5 w-5" />내 QR코드 보기
@@ -133,110 +202,169 @@ export default function RecyclingView({
           <div className="space-y-6">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-green px-3.5 py-1 text-xs font-bold text-white">
               <Leaf className="h-3.5 w-3.5 fill-white" />
+              분리배출 도우미
+            </span>
+
+            <div className="space-y-2">
+              <h3 className="text-2xl font-black text-brand-dark">
+                버리기 애매한 재활용품이 있나요?
+              </h3>
+              <p className="text-sm font-medium text-brand-gray leading-relaxed max-w-lg">
+                분리배출 방법을 모르는 물건 이름을 입력해 보세요. AI 도우미가
+                친절하고 정확한 배출 가이드를 알려 드립니다.
+              </p>
+            </div>
+
+            <div className="rounded-2xl bg-brand-ivory border border-brand-orange-light/60 p-5 space-y-3">
+              <h4 className="text-sm font-bold text-brand-orange">
+                오늘의 환경 팁
+              </h4>
+              <p className="text-xs font-semibold text-brand-dark leading-relaxed">
+                종이팩은 일반 종이와 재활용 공정이 다릅니다! 물로 깨끗이 헹군 후,
+                일반 종이류와 섞이지 않도록 우유팩 수거함에 별도로 버리셔야 진짜
+                재활용이 될 수 있어요.
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => setShowRecycleChat(true)}
+            className="w-full h-14 rounded-2xl bg-brand-green text-white font-extrabold text-base shadow-lg shadow-brand-green/15 hover:bg-brand-green-hover hover:scale-[1.01] active:scale-100 transition-all flex items-center justify-center gap-2 mt-8"
+          >
+            <Sparkles className="h-5 w-5 fill-white" />
+            AI 상담사에게 물어보기
+          </button>
+        </div>
+
+        <div className="lg:col-span-5 rounded-3xl border border-brand-orange-light bg-white p-8 md:p-12 shadow-xl shadow-brand-orange/5 flex flex-col justify-between min-h-[460px]">
+          <div className="space-y-6">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-orange px-3.5 py-1 text-xs font-bold text-white">
+              <Coins className="h-3.5 w-3.5" />
               분리수거 포인트
             </span>
 
-            <h3 className="text-3xl font-black leading-tight text-brand-dark sm:text-4xl">
-              자원을 다시 달리게 만드는 당신,
-              <br />
-              지구를 구하고 있는 우리 동네의 영웅입니다.
-            </h3>
-
-            <p className="text-base font-semibold leading-relaxed text-brand-gray max-w-2xl">
-              올바른 재활용품 분리배출은 버려지는 자원의 80% 이상을 고품질
-              섬유나 원료로 재탄생시킵니다. 오늘부터 캔, 페트병을 온기 터미널에
-              넣고 일상의 따뜻한 지구 살리기에 일조해 주세요!
-            </p>
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-t border-brand-orange-light/50 pt-8 mt-8 gap-4">
-            <div className="flex items-center gap-4 bg-brand-orange-light/20 border border-brand-orange-light/50 rounded-2xl p-4 w-full sm:w-auto">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white shadow-sm">
-                <Coins className="h-6 w-6 text-brand-orange" />
-              </div>
-              <div>
-                <span className="text-xs font-extrabold text-brand-gray">
-                  가용 포인트
-                </span>
-                <p className="text-xl font-black text-brand-orange">
-                  {(userPoints ?? 0).toLocaleString()} P
-                </p>
-              </div>
+            <div className="space-y-2">
+              <h3 className="text-2xl font-black text-brand-dark">
+                적립된 나의 온기 포인트
+              </h3>
+              <p className="text-sm font-medium text-brand-gray">
+                오늘 분리배출을 완료하고 이웃의 온기를 채워보세요.
+              </p>
             </div>
 
-            <button
-              onClick={() => setShowRecycleChat(!showRecycleChat)}
-              className="flex h-12 w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-brand-dark px-6 font-bold text-white hover:bg-brand-gray transition-all"
-            >
-              <Sparkles className="h-4 w-4 text-brand-orange" />
-              배출 방법 물어보기
-            </button>
-          </div>
-        </div>
-
-        <div className="lg:col-span-5 flex flex-col rounded-3xl bg-brand-orange-light/10 border border-brand-orange-light overflow-hidden shadow-xl shadow-brand-orange/5 min-h-[460px] h-[520px] lg:h-auto">
-          <div className="p-6 border-b border-brand-orange-light/40 bg-white flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-brand-orange" />
-              <span className="font-bold text-brand-dark text-sm">
-                분리배출 도우미
+            <div className="rounded-2xl bg-brand-ivory border border-brand-orange-light/60 p-6 flex flex-col items-center justify-center space-y-2 shadow-inner">
+              <span className="text-xs font-extrabold text-brand-gray">
+                나의 현재 적립 포인트
+              </span>
+              <span className="text-3xl font-black text-brand-orange">
+                {(userPoints ?? 0).toLocaleString()} P
               </span>
             </div>
+
+            <div className="space-y-2.5 pt-2">
+              <div className="flex items-center gap-2.5 text-xs font-semibold text-brand-dark">
+                <div className="h-2 w-2 rounded-full bg-brand-orange"></div>
+                페트병: 개당 10P 적립
+              </div>
+              <div className="flex items-center gap-2.5 text-xs font-semibold text-brand-dark">
+                <div className="h-2 w-2 rounded-full bg-brand-orange"></div>
+                캔류: 개당 8P 적립
+              </div>
+              <div className="flex items-center gap-2.5 text-xs font-semibold text-brand-dark">
+                <div className="h-2 w-2 rounded-full bg-brand-orange"></div>
+                종이팩/소형가전: 크기별 포인트 등급 적립
+              </div>
+            </div>
           </div>
 
-          <div className="flex-1 p-6 space-y-4 overflow-y-auto text-sm leading-relaxed">
-            {chatHistory.map((msg, i) => (
-              <div
-                key={i}
-                className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
-              >
-                <div
-                  className={`max-w-[85%] rounded-2xl px-4 py-3 shadow-sm border ${
-                    msg.sender === "user"
-                      ? "bg-brand-orange text-white border-transparent"
-                      : "bg-white text-brand-dark border-brand-orange-light/50 whitespace-pre-wrap"
-                  }`}
-                >
-                  {msg.text}
-                </div>
-              </div>
-            ))}
-            {isAiLoading && (
-              <div className="flex justify-start">
-                <div className="max-w-[85%] rounded-2xl px-4 py-3 bg-white text-brand-dark border border-brand-orange-light/50 flex items-center gap-2">
-                  <div className="flex gap-1">
-                    <div className="h-1.5 w-1.5 rounded-full bg-brand-green animate-bounce"></div>
-                    <div className="h-1.5 w-1.5 rounded-full bg-brand-green animate-bounce delay-75"></div>
-                    <div className="h-1.5 w-1.5 rounded-full bg-brand-green animate-bounce delay-150"></div>
-                  </div>
-                  <span>AI 분석 중...</span>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <form
-            onSubmit={handleAiChatSubmit}
-            className="p-4 border-t border-brand-orange-light/40 bg-white flex gap-2"
-          >
-            <input
-              type="text"
-              placeholder="예: 깨진 컵, 보조 배터리, 페트병..."
-              value={chatInput}
-              onChange={(e) => setChatInput(e.target.value)}
-              disabled={isAiLoading}
-              className="flex-1 h-12 rounded-xl border border-brand-orange-light bg-white px-4 text-brand-dark font-medium placeholder-brand-gray/50 outline-none focus:border-brand-orange transition-all text-xs"
-            />
-            <button
-              type="submit"
-              disabled={isAiLoading || !chatInput.trim()}
-              className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-orange text-white shadow hover:bg-brand-orange-hover active:scale-95 transition-all disabled:opacity-50"
-            >
-              <Send className="h-4.5 w-4.5" />
-            </button>
-          </form>
+          <p className="text-[10px] font-medium text-brand-gray/80 leading-normal mt-6">
+            ※ 온기 수거함에 올바르지 않은 품목을 배출하거나 오염된 품목을 투입할
+            경우 포인트 적립이 취소되거나 이용이 제한될 수 있습니다.
+          </p>
         </div>
       </div>
+
+      {showRecycleChat && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-brand-dark/50 p-4 backdrop-blur-sm animate-fade-in">
+          <div className="relative w-full max-w-md rounded-3xl bg-white border border-brand-orange-light overflow-hidden shadow-2xl flex flex-col h-[80vh] animate-scale-up">
+            <div className="bg-brand-green px-6 py-5 text-white flex items-center justify-between shadow-md">
+              <div className="flex items-center gap-2.5">
+                <div className="h-9 w-9 rounded-full bg-white/20 flex items-center justify-center border border-white/10">
+                  <Sparkles className="h-4.5 w-4.5 fill-white" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-sm tracking-wide">
+                    분리배출 AI 상담사
+                  </h3>
+                  <span className="text-[10px] font-medium opacity-85">
+                    실시간 지능형 배출 안내
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowRecycleChat(false)}
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25 transition-all"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 bg-brand-ivory/50 space-y-4">
+              {chatHistory.map((msg, index) => (
+                <div
+                  key={index}
+                  className={`flex ${
+                    msg.sender === "user" ? "justify-end" : "justify-start"
+                  }`}
+                >
+                  <div
+                    className={`max-w-[85%] rounded-2xl px-4 py-3 text-xs leading-relaxed font-semibold ${
+                      msg.sender === "user"
+                        ? "bg-brand-green text-white shadow-sm"
+                        : "bg-white text-brand-dark border border-brand-orange-light/50 shadow-sm whitespace-pre-line"
+                    }`}
+                  >
+                    {msg.text}
+                  </div>
+                </div>
+              ))}
+              {isAiLoading && (
+                <div className="flex justify-start">
+                  <div className="max-w-[85%] rounded-2xl px-4 py-3 bg-white text-brand-dark border border-brand-orange-light/50 flex items-center gap-2">
+                    <div className="flex gap-1">
+                      <div className="h-1.5 w-1.5 rounded-full bg-brand-green animate-bounce"></div>
+                      <div className="h-1.5 w-1.5 rounded-full bg-brand-green animate-bounce delay-75"></div>
+                      <div className="h-1.5 w-1.5 rounded-full bg-brand-green animate-bounce delay-150"></div>
+                    </div>
+                    <span>AI 분석 중...</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <form
+              onSubmit={handleAiChatSubmit}
+              className="p-4 border-t border-brand-orange-light/40 bg-white flex gap-2"
+            >
+              <input
+                type="text"
+                placeholder="예: 깨진 컵, 보조 배터리, 페트병..."
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                disabled={isAiLoading}
+                className="flex-1 h-12 rounded-xl border border-brand-orange-light bg-white px-4 text-brand-dark font-medium placeholder-brand-gray/50 outline-none focus:border-brand-orange transition-all text-xs"
+              />
+              <button
+                type="submit"
+                disabled={isAiLoading || !chatInput.trim()}
+                className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-orange text-white shadow hover:bg-brand-orange-hover active:scale-95 transition-all disabled:opacity-50"
+              >
+                <Send className="h-4.5 w-4.5" />
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
 
       {showQrModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-brand-dark/50 p-4 backdrop-blur-sm animate-fade-in">
@@ -260,7 +388,7 @@ export default function RecyclingView({
               </p>
             </div>
 
-            <div className="mx-auto flex h-48 w-48 items-center justify-center rounded-2xl bg-brand-ivory border-2 border-brand-orange-light/60 p-4 shadow-inner relative overflow-hidden">
+            <div className="mx-auto flex h-48 w-48 items-center justify-center rounded-2xl bg-brand-ivory border-2 border-brand-orange-light/60 p-3 shadow-inner relative overflow-hidden">
               {isQrScanned ? (
                 <div className="flex flex-col items-center justify-center text-center space-y-2 animate-pulse text-brand-green">
                   <Recycle className="h-12 w-12 animate-spin text-brand-green" />
@@ -268,27 +396,26 @@ export default function RecyclingView({
                     자원 인식 및 계정 연동 중...
                   </span>
                 </div>
+              ) : membershipQrLoading ? (
+                <div className="flex flex-col items-center justify-center text-center space-y-2 text-brand-gray">
+                  <QrCode className="h-12 w-12 animate-pulse text-brand-orange-light" />
+                  <span className="text-xs font-semibold">QR코드 생성 중...</span>
+                </div>
+              ) : membershipQrImage ? (
+                <img
+                  src={`data:image/png;base64,${membershipQrImage}`}
+                  alt="온기 회원 QR코드"
+                  className="h-full w-full object-contain"
+                />
               ) : (
-                <div className="absolute inset-4 border-4 border-brand-green flex flex-col justify-between p-1 select-none pointer-events-none">
-                  <div className="flex justify-between">
-                    <div className="h-6 w-6 bg-brand-green"></div>
-                    <div className="h-6 w-6 bg-brand-green"></div>
-                  </div>
-                  <div className="flex flex-col gap-1 items-center justify-center py-2">
-                    <div className="h-1.5 w-full bg-brand-green"></div>
-                    <div className="h-1.5 w-1/2 bg-brand-green"></div>
-                    <div className="h-1.5 w-3/4 bg-brand-green"></div>
-                  </div>
-                  <div className="flex justify-between items-end">
-                    <div className="h-6 w-6 bg-brand-green"></div>
-                    <div className="h-6 w-4 bg-brand-green"></div>
-                  </div>
+                <div className="flex flex-col items-center justify-center text-center space-y-2 text-red-500">
+                  <span className="text-xs font-bold">QR 불러오기 실패</span>
                 </div>
               )}
             </div>
 
             <div className="text-xs font-semibold text-brand-gray space-y-1">
-              <p>인증 계정: 김온기 (010-****-5678)</p>
+              <p>인증 계정: {userName} {userPhone ? `(${userPhone})` : ""}</p>
               <p>
                 적립이 완료되면 포인트 잔액이 실시간 반영됩니다.
               </p>

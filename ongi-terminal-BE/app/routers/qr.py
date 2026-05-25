@@ -8,10 +8,23 @@ from app.models.user import User
 from app.models.item import Item
 from app.models.transaction import ItemTransaction
 from app.schemas.qr import QRGenerateCheckin, QRGenerateCheckout, QRVerify, QRTokenOut, QRVerifyResult
-from app.services.qr_service import create_qr_token, get_valid_token, mark_token_used
+from app.services.qr_service import create_qr_token, get_valid_token, mark_token_used, generate_qr_image
 from app.services.point_service import earn_points
 
 router = APIRouter(prefix="/qr", tags=["qr"])
+
+
+@router.get("/membership", response_model=QRTokenOut)
+async def get_membership_qr(
+    current_user: User = Depends(get_current_user),
+):
+    """온기 회원 QR코드 생성 (유저 ID 연동)"""
+    from datetime import datetime, timedelta, timezone
+    token_str = f"ongi_member_{current_user.id}"
+    img = generate_qr_image(token_str)
+    # 1년 뒤 만료되는 장기 회원 토큰
+    expired_at = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(days=365)
+    return QRTokenOut(token=token_str, qr_type="membership", expired_at=expired_at, qr_image_base64=img)
 
 
 @router.post("/generate/checkin", response_model=QRTokenOut)
