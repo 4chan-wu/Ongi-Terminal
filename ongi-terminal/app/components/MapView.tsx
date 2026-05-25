@@ -112,6 +112,7 @@ interface MapViewProps {
   selectedTerminalId: string | null;
   setSelectedTerminalId: (id: string | null) => void;
   setCurrentTab: (tab: string) => void;
+  items: any[];
 }
 
 interface TerminalApiItem {
@@ -201,6 +202,7 @@ export default function MapView({
   selectedTerminalId,
   setSelectedTerminalId,
   setCurrentTab,
+  items,
 }: MapViewProps) {
   const appKey = process.env.NEXT_PUBLIC_KAKAO_MAP_APP_KEY ?? "";
   const [terminals, setTerminals] = useState<Terminal[]>([]);
@@ -226,7 +228,9 @@ export default function MapView({
             id: String(terminal.id),
             name: terminal.name,
             address: terminal.address,
-            sharingCount: 0,
+            sharingCount: items.filter(
+              (item) => item.terminalId === String(terminal.id) && item.status === "available"
+            ).length,
             capacity: "여유",
             status: "smooth" as const,
             desc: terminal.address,
@@ -245,7 +249,7 @@ export default function MapView({
       .catch(() => {
         setMapError("터미널 정보를 불러오지 못했습니다.");
       });
-  }, [selectedTerminalId, setSelectedTerminalId]);
+  }, [selectedTerminalId, setSelectedTerminalId, items]);
 
   const activeTerminal =
     terminals.find((terminal) => terminal.id === selectedTerminalId) ??
