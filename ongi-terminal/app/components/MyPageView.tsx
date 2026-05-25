@@ -138,22 +138,9 @@ export default function MyPageView({
   ];
   */
 
-  const receivedHistory = [
-    {
-      id: "1",
-      title: "샤오미 블루투스 스피커",
-      owner: "박수정",
-      date: "2026-05-15",
-      terminal: "주민센터 앞",
-    },
-    {
-      id: "2",
-      title: "어린이 영어 동화책 세트",
-      owner: "이영훈",
-      date: "2026-05-10",
-      terminal: "카페 앞",
-    },
-  ];
+  const [receivedHistory, setReceivedHistory] = useState<
+    { id: number; title: string; terminal_id: number | null }[]
+  >([]);
 
   return (
     <section className="mx-auto w-full max-w-7xl px-6 py-12 md:px-12 animate-fade-in">
@@ -253,7 +240,9 @@ export default function MyPageView({
                       className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-2xl border border-brand-orange-light bg-white p-4"
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <span className="text-3xl leading-none">{item.image}</span>
+                        <span className="text-3xl leading-none">
+                          {item.image}
+                        </span>
                         <div className="min-w-0">
                           <h4 className="font-extrabold text-brand-dark truncate">
                             {item.title}
@@ -315,7 +304,9 @@ export default function MyPageView({
                       className="flex items-center justify-between gap-4 rounded-2xl border border-brand-orange-light bg-white p-4"
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <span className="text-3xl leading-none">{item.image}</span>
+                        <span className="text-3xl leading-none">
+                          {item.image}
+                        </span>
                         <div className="min-w-0">
                           <h4 className="font-extrabold text-brand-dark truncate">
                             {item.title}
@@ -365,7 +356,7 @@ export default function MyPageView({
                         {item.title}
                       </h4>
                       <p className="text-xs text-brand-gray font-semibold mt-1">
-                        나눔한 이웃: {item.owner} | 수령 터미널: {item.terminal}
+                        터미널 #{item.terminal_id ?? "-"}
                       </p>
                     </div>
                     <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-brand-green-light px-2.5 py-1 text-xs font-bold text-brand-green">
