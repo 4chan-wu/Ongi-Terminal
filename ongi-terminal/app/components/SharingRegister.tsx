@@ -1,14 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import {
-  X,
-  Camera,
-  MapPin,
-  MessageSquare,
-  Sparkles,
-  Send,
-} from "lucide-react";
+import { X, Camera, MapPin, MessageSquare, Sparkles, Send } from "lucide-react";
 import { SharingItem } from "./SharingView";
 
 interface SharingRegisterProps {
@@ -32,7 +25,7 @@ export default function SharingRegister({
   const [reportDesc, setReportDesc] = useState("");
   const [explain, setExplain] = useState("");
   const [category, setCategory] = useState("전자기기");
-  const [terminalId, setTerminalId] = useState("123");
+  const [terminalId, setTerminalId] = useState("1");
   const [imageEmoji, setImageEmoji] = useState("🎁");
 
   // AI Chat states
@@ -74,7 +67,10 @@ export default function SharingRegister({
       if (!token) {
         setChatHistory((prev) => [
           ...prev,
-          { sender: "ai", text: "로그인 후 Gemini 글쓰기 도우미를 사용할 수 있습니다." },
+          {
+            sender: "ai",
+            text: "로그인 후 Gemini 글쓰기 도우미를 사용할 수 있습니다.",
+          },
         ]);
         return;
       }
@@ -98,7 +94,10 @@ export default function SharingRegister({
         } catch {
           // ignore parse failure and keep default message
         }
-        setChatHistory((prev) => [...prev, { sender: "ai", text: errorMessage }]);
+        setChatHistory((prev) => [
+          ...prev,
+          { sender: "ai", text: errorMessage },
+        ]);
         return;
       }
 
@@ -110,7 +109,8 @@ export default function SharingRegister({
       setExplain(data.explain || "");
       setTerminalId(data.terminal_id || "123");
 
-      const terminalLabel = data.terminal_id === "123" ? "기본 터미널" : data.terminal_id;
+      const terminalLabel =
+        data.terminal_id === "123" ? "기본 터미널" : data.terminal_id;
 
       const aiResponse = `Gemini가 등록 정보를 작성했습니다.\n\n물품명: ${data.title}\n카테고리: ${data.category}\n터미널: ${terminalLabel}\n\n왼쪽 폼을 검토한 뒤 바로 등록하시면 됩니다.`;
       setChatHistory((prev) => [...prev, { sender: "ai", text: aiResponse }]);
@@ -146,6 +146,7 @@ export default function SharingRegister({
     formData.append("explain", explain);
     formData.append("report_desc", reportDesc);
     formData.append("terminal_id", terminalId);
+    formData.append("category", category);
 
     try {
       const res = await fetch("http://localhost:8000/items", {

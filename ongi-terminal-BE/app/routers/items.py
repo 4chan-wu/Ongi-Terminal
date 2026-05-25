@@ -23,6 +23,7 @@ VALID_STATUSES = {"registered", "stored", "reserved", "taken", "expired", "rejec
 @router.post("", response_model=ItemOut, status_code=201)
 async def create_item(
     title: str = Form(...),
+    category: str = Form("기타"),
     description: str | None = Form(None),
     terminal_id: int | None = Form(None),
     image: UploadFile | None = File(None),
@@ -48,10 +49,7 @@ async def create_item(
             f.write(content)
         image_url = f"/uploads/{filename}"
 
-    if image_b64:
-        ai = await classify_item_with_image(title, image_b64, media_type)
-    else:
-        ai = await classify_item(title, description)
+    ai = {"category": category, "tags": []}
 
     item = Item(
         donor_id=current_user.id,
