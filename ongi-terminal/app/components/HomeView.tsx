@@ -161,7 +161,7 @@ export default function HomeView({
             </div>
 
             <div className="absolute top-4 left-4 bg-brand-dark/80 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-semibold shadow">
-              💡 번호를 누르면 상세 지도로 연결됩니다
+              번호를 누르면 상세 지도로 연결됩니다
             </div>
           </div>
         </div>

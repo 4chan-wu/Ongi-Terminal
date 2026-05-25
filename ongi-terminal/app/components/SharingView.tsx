@@ -200,7 +200,7 @@ export default function SharingView({
                 </span>
                 <div className="absolute top-4 left-4">
                   {item.status === "available" ? (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-brand-orange px-3 py-1 text-xs font-bold text-white shadow-sm shadow-brand-orange/20 animate-pulse">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-brand-orange px-3 py-1 text-xs font-bold text-white shadow-sm shadow-brand-orange/20">
                       나눔 대기중
                     </span>
                   ) : item.status === "reserved" ? (
@@ -303,7 +303,7 @@ export default function SharingView({
 
                 <div className="space-y-1.5">
                   <h4 className="text-sm font-bold text-brand-gray">
-                    ⚠️ 특이사항 및 사용감
+                    특이사항 및 사용감
                   </h4>
                   <p className="text-sm font-medium text-brand-dark leading-relaxed pl-1">
                     {selectedItem.reportDesc || "없음"}
@@ -312,7 +312,7 @@ export default function SharingView({
 
                 <div className="space-y-1.5">
                   <h4 className="text-sm font-bold text-brand-gray">
-                    📝 상세 설명
+                    상세 설명
                   </h4>
                   <p className="text-sm font-medium text-brand-dark leading-relaxed pl-1">
                     {selectedItem.explain || "상세 정보가 없습니다."}
@@ -366,15 +366,12 @@ export default function SharingView({
               <X className="h-4 w-4" />
             </button>
 
-            <div className="flex flex-col items-center space-y-1.5 pt-4">
-              <span className="inline-flex items-center gap-1 rounded-full bg-brand-orange-light text-brand-orange px-3 py-1 text-xs font-bold uppercase">
-                Receipt QR
-              </span>
+            <div className="flex flex-col items-start space-y-1 pt-2">
               <h3 className="text-xl font-black text-brand-dark">
                 보관함 인수증
               </h3>
               <p className="text-xs font-medium text-brand-gray">
-                무인 캐비닛에서 QR코드를 스캔해 수령하세요.
+                무인 캐비넷에서 QR코드를 스캔해 수령하세요.
               </p>
             </div>
 

@@ -178,7 +178,7 @@ export default function Home() {
   // State synchronization helper functions
   const handleReserveItem = (itemId: string) => {
     if (!isLoggedIn) {
-      alert("나눔 서비스를 이용하시려면 로그인이 필요합니다!");
+      alert("나눔 서비스를 이용하시려면 로그인이 필요합니다.");
       setCurrentTab("login");
       return;
     }
@@ -255,7 +255,7 @@ export default function Home() {
             setSelectedTerminalId={setSelectedTerminalId}
             onOpenRegister={() => {
               if (!isLoggedIn) {
-                alert("나눔 등록을 하시려면 로그인이 필요합니다!");
+                alert("나눔 등록을 하시려면 로그인이 필요합니다.");
                 setCurrentTab("login");
               } else {
                 setShowRegisterModal(true);
@@ -271,7 +271,7 @@ export default function Home() {
             onCancelReservation={handleCancelReservation}
             onOpenRegister={() => {
               if (!isLoggedIn) {
-                alert("나눔 등록을 하시려면 로그인이 필요합니다!");
+                alert("나눔 등록을 하시려면 로그인이 필요합니다.");
                 setCurrentTab("login");
               } else {
                 setShowRegisterModal(true);

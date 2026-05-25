@@ -11,6 +11,7 @@ import {
   CheckCircle2,
   AlertCircle,
   ShoppingBag,
+  Gift,
   X,
 } from "lucide-react";
 import { SharingItem } from "./SharingView";
@@ -97,7 +98,7 @@ export default function MyPageView({
   ) => {
     if (userPoints < cost) {
       alert(
-        "포인트가 부족합니다! 재활용 분리수거로 온기 포인트를 적립해 주세요! 🪙",
+        "포인트가 부족합니다. 재활용 분리수거로 온기 포인트를 적립해 주세요!",
       );
       return;
     }
@@ -121,7 +122,7 @@ export default function MyPageView({
 
       onUsePoints(cost);
       alert(
-        `🎉 교환 성공!\n\n'${itemName}' 교환이 완료되었습니다! (-${cost.toLocaleString()}P)`,
+        `교환 완료\n\n'${itemName}' 교환이 완료되었습니다. (-${cost.toLocaleString()}P)`,
       );
       setShowUsePointsModal(false);
     } catch {
@@ -162,11 +163,8 @@ export default function MyPageView({
             <div className="absolute top-0 right-0 w-32 h-32 bg-brand-orange-light/10 rounded-bl-full select-none pointer-events-none"></div>
 
             <div className="flex flex-col items-center text-center space-y-4 pt-4">
-              <div className="relative h-28 w-28 rounded-full bg-brand-orange-light flex items-center justify-center border-4 border-white shadow-md relative overflow-hidden">
-                <span className="text-4xl">🧑‍💻</span>
-                <div className="absolute bottom-0 w-full bg-brand-dark/70 py-0.5 text-[10px] font-bold text-white uppercase">
-                  사진
-                </div>
+              <div className="relative h-28 w-28 rounded-full bg-brand-orange-light flex items-center justify-center border-4 border-white shadow-md overflow-hidden">
+                <User className="h-14 w-14 text-brand-orange" />
               </div>
               <div>
                 <h3 className="text-2xl font-black text-brand-dark">
@@ -196,15 +194,15 @@ export default function MyPageView({
 
           <div className="rounded-3xl bg-white border border-brand-orange-light p-6 shadow-xl shadow-brand-orange/5 flex flex-col justify-between items-stretch gap-4">
             <div className="flex items-center gap-4 bg-brand-orange-light/20 border border-brand-orange-light/50 rounded-2xl p-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white shadow-sm text-2xl">
-                🪙
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white shadow-sm">
+                <Coins className="h-6 w-6 text-brand-orange" />
               </div>
               <div className="flex-1">
                 <span className="text-xs font-extrabold text-brand-gray">
                   나의 온기 포인트
                 </span>
                 <p className="text-2xl font-black text-brand-orange mt-0.5">
-                  {userPoints.toLocaleString()} P
+                  {(userPoints ?? 0).toLocaleString()} P
                 </p>
               </div>
               <button
@@ -255,7 +253,7 @@ export default function MyPageView({
                       className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-2xl border border-brand-orange-light bg-white p-4"
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <span className="text-4xl">{item.image}</span>
+                        <span className="text-3xl leading-none">{item.image}</span>
                         <div className="min-w-0">
                           <h4 className="font-extrabold text-brand-dark truncate">
                             {item.title}
@@ -317,7 +315,7 @@ export default function MyPageView({
                       className="flex items-center justify-between gap-4 rounded-2xl border border-brand-orange-light bg-white p-4"
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <span className="text-4xl">{item.image}</span>
+                        <span className="text-3xl leading-none">{item.image}</span>
                         <div className="min-w-0">
                           <h4 className="font-extrabold text-brand-dark truncate">
                             {item.title}
@@ -440,20 +438,17 @@ export default function MyPageView({
           <div className="relative w-full max-w-lg rounded-3xl bg-white border border-brand-orange-light p-8 shadow-2xl space-y-6 animate-scale-up">
             <button
               onClick={() => setShowUsePointsModal(false)}
-              className="absolute top-6 right-6 flex h-8 w-8 items-center justify-center rounded-full bg-brand-ivory text-brand-gray hover:text-brand-orange hover:bg-brand-orange-light/20 transition-all animate-pulse"
+              className="absolute top-6 right-6 flex h-8 w-8 items-center justify-center rounded-full bg-brand-ivory text-brand-gray hover:text-brand-orange hover:bg-brand-orange-light/20 transition-all"
             >
               <X className="h-4 w-4" />
             </button>
 
-            <div className="flex flex-col items-center space-y-1.5 pt-4">
-              <span className="inline-flex items-center gap-1 rounded-full bg-brand-orange-light text-brand-orange px-3 py-1 text-xs font-bold uppercase">
-                Exchange Shop
-              </span>
-              <h3 className="text-2xl font-black text-brand-dark">
-                온기 마켓 (기프티콘 교환)
+            <div className="flex flex-col items-start space-y-1 pt-2">
+              <h3 className="text-xl font-black text-brand-dark">
+                포인트 교환
               </h3>
-              <p className="text-xs font-medium text-brand-gray">
-                쌓으신 소중한 온기 포인트로 다양한 상품을 즉시 교환하세요.
+              <p className="text-sm font-medium text-brand-gray">
+                온기 포인트로 상품을 교환하세요.
               </p>
             </div>
 
@@ -471,9 +466,9 @@ export default function MyPageView({
                   className="flex items-center justify-between p-4 border border-zinc-100 hover:border-brand-orange-light hover:bg-brand-orange-light/5 rounded-2xl cursor-pointer transition-all duration-300"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-3xl bg-white shadow-sm h-12 w-12 rounded-xl flex items-center justify-center border border-zinc-100">
-                      🎁
-                    </span>
+                    <div className="bg-brand-orange-light/30 h-11 w-11 rounded-xl flex items-center justify-center border border-brand-orange-light">
+                      <Gift className="h-5 w-5 text-brand-orange" />
+                    </div>
                     <div className="text-left">
                       <span className="font-extrabold text-brand-dark block text-sm">
                         {reward.name}
