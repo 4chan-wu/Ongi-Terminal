@@ -117,6 +117,7 @@ export default function Home() {
             status: string;
             terminal_id: number;
             donor_id: number;
+            donor_nickname?: string;
             desc?: string;
             explain?: string;
             report_desc?: string;
@@ -135,8 +136,9 @@ export default function Home() {
                   ? "completed"
                   : "available",
             category: item.category || "기타",
-            image:
-              item.category === "전자기기"
+            // 등록 시 저장된 이모지(image_url)가 있으면 사용, 없으면 카테고리로 폴백
+            image: item.image_url ||
+              (item.category === "전자기기"
                 ? "🎧"
                 : item.category === "도서"
                   ? "📚"
@@ -144,8 +146,9 @@ export default function Home() {
                     ? "🕯️"
                     : item.category === "의류"
                       ? "👕"
-                      : "🎁",
-            owner: `사용자 ${item.donor_id}`,
+                      : "🎁"),
+            // donor_nickname이 API에서 오면 사용, 없으면 ID 표시
+            owner: item.donor_nickname || `이웃 주민 ${item.donor_id}`,
             createdAt: new Date().toISOString().split("T")[0],
           }),
         );
@@ -459,6 +462,11 @@ export default function Home() {
         <SharingRegister
           onClose={() => setShowRegisterModal(false)}
           onRegister={handleRegisterItem}
+          onSuccess={() => {
+            setShowRegisterModal(false);
+            setCurrentTab("sharing");
+          }}
+          userNickname={userProfile.id}
         />
       )}
 

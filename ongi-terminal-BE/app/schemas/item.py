@@ -13,6 +13,7 @@ class ItemCreate(BaseModel):
 class ItemOut(BaseModel):
     id: int
     donor_id: int | None
+    donor_nickname: str | None = None  # 등록자 닉네임 (JOIN으로 채워짐)
     terminal_id: int | None
     title: str
     description: str | None
@@ -24,7 +25,7 @@ class ItemOut(BaseModel):
     image_url: str | None
     status: str
 
-    model_config = {"from_attributes": True}
+    model_config = {"from_attributes": True, "arbitrary_types_allowed": True}
 
 
 class ItemStatusUpdate(BaseModel):

@@ -9,6 +9,8 @@ interface SharingRegisterProps {
   onRegister: (
     item: Omit<SharingItem, "id" | "status" | "owner" | "createdAt">,
   ) => void;
+  onSuccess?: () => void;
+  userNickname?: string;
 }
 
 interface ChatMessage {
@@ -19,7 +21,10 @@ interface ChatMessage {
 export default function SharingRegister({
   onClose,
   onRegister,
+  onSuccess,
+  userNickname,
 }: SharingRegisterProps) {
+  const [registered, setRegistered] = useState(false);
   const [title, setTitle] = useState("");
   const [desc, setDesc] = useState("");
   const [reportDesc, setReportDesc] = useState("");
@@ -143,48 +148,87 @@ export default function SharingRegister({
       return;
     }
 
-    const formData = new FormData();
-    formData.append("title", title);
-    formData.append("desc", desc);
-    formData.append("explain", explain);
-    formData.append("report_desc", reportDesc);
-    formData.append("terminal_id", terminalId);
-    formData.append("category", category);
+      const formData = new FormData();
+      formData.append("title", title);
+      formData.append("desc", desc);
+      formData.append("explain", explain);
+      formData.append("report_desc", reportDesc);
+      formData.append("terminal_id", terminalId);
+      formData.append("category", category);
+      // 선택한 이모지를 image_url로 저장해서 나중에 목록에서 복원
+      formData.append("image_url", imageEmoji);
 
-    try {
-      const res = await fetch("http://localhost:8000/items", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      });
+      try {
+        const res = await fetch("http://localhost:8000/items", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData,
+        });
 
-      if (!res.ok) {
-        const err = await res.json();
-        alert(err.detail || "물품 등록 실패");
-        return;
+        if (!res.ok) {
+          const err = await res.json();
+          alert(err.detail || "물품 등록 실패");
+          return;
+        }
+
+        onRegister({
+          title,
+          desc,
+          reportDesc,
+          explain,
+          category,
+          terminalId,
+          location: 
+            terminalId === "1" ? "카페 앞 터미널" : 
+            terminalId === "2" ? "주민센터 터미널" : 
+            terminalId === "3" ? "지하철역 터미널" : 
+            `터미널 ${terminalId}`,
+          image: imageEmoji,
+        });
+
+        // 완료 화면으로 전환 (새로고침 없이)
+        setRegistered(true);
+      } catch {
+        alert("서버 연결 오류");
       }
+    };
 
-      onRegister({
-        title,
-        desc,
-        reportDesc,
-        explain,
-        category,
-        terminalId,
-        location: 
-          terminalId === "1" ? "카페 앞 터미널" : 
-          terminalId === "2" ? "주민센터 터미널" : 
-          terminalId === "3" ? "지하철역 터미널" : 
-          `터미널 ${terminalId}`,
-        image: imageEmoji,
-      });
-
-      alert("나눔 물품이 온기 터미널에 성공적으로 등록되었습니다! 🎁");
-      window.location.reload();
-    } catch {
-      alert("서버 연결 오류");
-    }
-  };
+  // 등록 완료 화면
+  if (registered) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-brand-dark/50 p-4 backdrop-blur-sm animate-fade-in">
+        <div className="relative w-full max-w-md rounded-3xl bg-white border border-brand-orange-light overflow-hidden shadow-2xl animate-scale-up p-10 flex flex-col items-center gap-6 text-center">
+          <div className="flex h-24 w-24 items-center justify-center rounded-full bg-brand-orange-light/30 border-2 border-brand-orange text-5xl">
+            {imageEmoji}
+          </div>
+          <div>
+            <h2 className="text-2xl font-black text-brand-dark mb-2">🎉 나눔 등록 완료!</h2>
+            <p className="text-brand-gray font-medium">
+              ‘{title}’이(가) 온기 터미널에
+              <br />성공적으로 등록되었어요! 🤍
+            </p>
+            {userNickname && (
+              <p className="mt-2 text-xs text-brand-orange font-bold">@{userNickname}</p>
+            )}
+          </div>
+          <div className="flex flex-col w-full gap-3">
+            <button
+              onClick={() => onSuccess?.()}
+              className="w-full h-14 rounded-2xl bg-brand-orange text-white font-bold text-base shadow-lg shadow-brand-orange/20 hover:bg-brand-orange-hover hover:scale-[1.01] transition-all"
+            >
+              나눔 목록 보러가기
+            </button>
+            <button
+              onClick={onClose}
+              className="w-full h-12 rounded-2xl bg-brand-ivory border border-brand-orange-light/60 text-brand-gray font-semibold hover:bg-brand-orange-light/20 transition-all"
+            >
+              닫기
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-brand-dark/50 p-4 backdrop-blur-sm animate-fade-in">
       <div className="relative w-full max-w-5xl rounded-3xl bg-white border border-brand-orange-light overflow-hidden shadow-2xl animate-scale-up max-h-[92vh] flex flex-col">

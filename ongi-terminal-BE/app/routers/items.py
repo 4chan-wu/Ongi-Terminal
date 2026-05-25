@@ -4,6 +4,7 @@ import base64
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.orm import joinedload
 
 from app.database import get_db
 from app.core.deps import get_current_user
@@ -27,15 +28,14 @@ async def create_item(
     description: str | None = Form(None),
     terminal_id: int | None = Form(None),
     image: UploadFile | None = File(None),
+    image_url: str | None = Form(None),  # 이모지 직접 전달 시 사용
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
     desc: str | None = Form(None),
     explain: str | None = Form(None),
     report_desc: str | None = Form(None),
 ):
-    image_url = None
-    image_b64 = None
-    media_type = "image/jpeg"
+    stored_image_url = image_url  # 이모지 문자열이나 업로드된 파일 URL
 
     if image:
         content = await image.read()
@@ -47,7 +47,7 @@ async def create_item(
         path = os.path.join(settings.LOCAL_UPLOAD_DIR, filename)
         with open(path, "wb") as f:
             f.write(content)
-        image_url = f"/uploads/{filename}"
+        stored_image_url = f"/uploads/{filename}"
 
     ai = {"category": category, "tags": []}
 
@@ -61,7 +61,7 @@ async def create_item(
         report_desc=report_desc,
         category=ai["category"],
         tags=",".join(ai["tags"]),
-        image_url=image_url,
+        image_url=stored_image_url,
         status="registered",
     )
     db.add(item)
@@ -72,7 +72,11 @@ async def create_item(
 
     await earn_points(db, current_user.id, 20, "물품 나눔 등록", item.id)
 
-    return item
+    # donor_nickname 돌려주기 위해 응답 딕셔너리 직접 생성
+    return ItemOut(
+        **{k: getattr(item, k) for k in item.__table__.columns.keys()},
+        donor_nickname=current_user.nickname,
+    )
 
 @router.get("", response_model=list[ItemOut])
 async def list_items(
@@ -80,13 +84,20 @@ async def list_items(
     category: str | None = None,
     db: AsyncSession = Depends(get_db),
 ):
-    q = select(Item).where(Item.status.in_(["registered", "stored"]))
+    q = select(Item).options(joinedload(Item.donor)).where(Item.status.in_(["registered", "stored"]))
     if terminal_id:
         q = q.where(Item.terminal_id == terminal_id)
     if category:
         q = q.where(Item.category == category)
     result = await db.execute(q.order_by(Item.id.desc()).limit(100))
-    return result.scalars().all()
+    items = result.unique().scalars().all()
+    return [
+        ItemOut(
+            **{k: getattr(item, k) for k in item.__table__.columns.keys()},
+            donor_nickname=item.donor.nickname if item.donor else None,
+        )
+        for item in items
+    ]
 
 @router.get("/my", response_model=list[ItemOut])
 async def list_my_items(
@@ -98,7 +109,14 @@ async def list_my_items(
         .where(Item.donor_id == current_user.id)
         .order_by(Item.id.desc())
     )
-    return result.scalars().all()
+    items = result.scalars().all()
+    return [
+        ItemOut(
+            **{k: getattr(item, k) for k in item.__table__.columns.keys()},
+            donor_nickname=current_user.nickname,
+        )
+        for item in items
+    ]
 
 
 @router.get("/received", response_model=list[ItemOut])
