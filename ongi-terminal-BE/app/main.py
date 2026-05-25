@@ -1,4 +1,5 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import os
@@ -8,6 +9,7 @@ from app.routers import auth, users, terminals, items, qr, recycle, points, rewa
 from sqlalchemy import select
 from app.database import AsyncSessionLocal
 from app.models.terminal import Terminal
+from app.services.llm_service import LLMServiceError
 
 app = FastAPI(
     title="온기 터미널 API",
@@ -39,6 +41,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.exception_handler(LLMServiceError)
+async def llm_service_error_handler(request: Request, exc: LLMServiceError):
+    return JSONResponse(
+        status_code=500,
+        content={"detail": str(exc)},
+    )
 
 app.include_router(auth.router)
 app.include_router(users.router)

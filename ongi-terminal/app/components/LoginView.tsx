@@ -39,7 +39,7 @@ export default function LoginView({
         const res = await fetch("http://localhost:8000/auth/register", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, nickname: id, password: pw }),
+          body: JSON.stringify({ email, nickname: id, password: pw, name, phone }),
         });
         if (!res.ok) {
           const err = await res.json();
@@ -48,7 +48,13 @@ export default function LoginView({
         }
         const data = await res.json();
         localStorage.setItem("access_token", data.access_token);
-        onLoginSuccess(id, id, email, phone, interest); //id님 이렇게 불러오려고 바꿈 (여기만)
+        
+        const meRes = await fetch("http://localhost:8000/users/me", {
+          headers: { Authorization: `Bearer ${data.access_token}` },
+        });
+        const meData = await meRes.json();
+        
+        onLoginSuccess(meData.name || meData.nickname, meData.nickname, meData.email || "", meData.phone || "", interest);
         setCurrentTab("home");
       } catch {
         alert("서버 연결 오류");
@@ -66,8 +72,6 @@ export default function LoginView({
             email,
             nickname: id,
             password: pw,
-            name,
-            phone,
           }),
         });
         if (!res.ok) {
@@ -77,7 +81,13 @@ export default function LoginView({
         }
         const data = await res.json();
         localStorage.setItem("access_token", data.access_token);
-        onLoginSuccess(name || id, id, email, phone, interest);
+        
+        const meRes = await fetch("http://localhost:8000/users/me", {
+          headers: { Authorization: `Bearer ${data.access_token}` },
+        });
+        const meData = await meRes.json();
+        
+        onLoginSuccess(meData.name || meData.nickname, meData.nickname, meData.email || "", meData.phone || "", interest);
         setCurrentTab("home");
       } catch {
         alert("서버 연결 오류");

@@ -141,6 +141,35 @@ export default function Home() {
   useEffect(() => {
     const token = localStorage.getItem("access_token");
     if (!token) return;
+    
+    // Auto-login session restore
+    fetch("http://localhost:8000/users/me", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Invalid token");
+        return res.json();
+      })
+      .then((data) => {
+        setUserProfile({
+          name: data.name || data.nickname,
+          id: data.nickname,
+          email: data.email || "",
+          phone: data.phone || "",
+          interest: "재활용 및 환경 보호",
+        });
+        setIsLoggedIn(true);
+      })
+      .catch(() => {
+        localStorage.removeItem("access_token");
+        setIsLoggedIn(false);
+      });
+  }, []);
+
+  // Fetch points when login state changes
+  useEffect(() => {
+    const token = localStorage.getItem("access_token");
+    if (!token || !isLoggedIn) return;
     fetch("http://localhost:8000/points/balance", {
       headers: { Authorization: `Bearer ${token}` },
     })

@@ -6,37 +6,19 @@ class UserRegister(BaseModel):
     email: EmailStr
     nickname: str
     password: str
-
+    name: str | None = None
+    phone: str | None = None
 
 class UserLogin(BaseModel):
     nickname: str
     password: str
 
-class UserRegister(BaseModel):
-    email: EmailStr
-    nickname: str
-    password: str
-    name: str | None = None
-    phone: str | None = None
-
 class UserOut(BaseModel):
     id: int
     email: str
     nickname: str
     name: str | None = None
     phone: str | None = None
-    role: str
-    warmth_score: int
-    point_balance: int
-    created_at: datetime
-
-    model_config = {"from_attributes": True}
-
-
-class UserOut(BaseModel):
-    id: int
-    email: str
-    nickname: str
     role: str
     warmth_score: int
     point_balance: int
