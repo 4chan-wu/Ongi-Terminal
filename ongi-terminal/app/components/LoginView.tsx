@@ -103,10 +103,17 @@ export default function LoginView({
           <div className="absolute -bottom-12 -right-12 w-48 h-48 rounded-full bg-brand-green/10 blur-2xl"></div>
 
           <div className="space-y-4">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-orange px-3 py-1 text-xs font-bold text-white uppercase tracking-wider">
-              <Sparkles className="h-3.5 w-3.5" />
-              Eco Sharing
-            </span>
+            <div className="flex items-center gap-3">
+              <img
+                src="/logo.png"
+                alt="온기 터미널 로고"
+                className="h-10 w-10 object-contain rounded-lg shadow-sm"
+              />
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-orange px-3 py-1 text-xs font-bold text-white uppercase tracking-wider">
+                <Sparkles className="h-3.5 w-3.5" />
+                Eco Sharing
+              </span>
+            </div>
             <h2 className="text-3xl font-extrabold leading-tight text-brand-dark">
               동네의 온기를 나누는
               <br />

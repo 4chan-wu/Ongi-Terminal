@@ -15,6 +15,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "온기 터미널 (Ongi Terminal) - 동네 자원 정거장",
   description: "이웃과 물건을 무료로 나누고, 재활용품은 온기 포인트로 교환하는 따뜻한 친환경 자원 공유 정거장",
+  icons: {
+    icon: "/logo.png",
+  },
 };
 
 export default function RootLayout({
