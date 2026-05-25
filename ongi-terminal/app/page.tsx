@@ -19,13 +19,13 @@ export default function Home() {
   );
 
   // Authenticated User State (Default mock matching Figma Profile page)
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(true);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [userProfile, setUserProfile] = useState({
-    name: "김온기",
-    id: "ongilove",
-    email: "ongilove@ongi.com",
-    phone: "010-1234-5678",
-    interest: "전자기기/도서",
+    name: "",
+    id: "",
+    email: "",
+    phone: "",
+    interest: "",
   });
 
   // Points State (Figma Point metric starts at 3,000P)
