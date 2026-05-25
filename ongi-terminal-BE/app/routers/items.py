@@ -88,6 +88,36 @@ async def list_items(
     result = await db.execute(q.order_by(Item.id.desc()).limit(100))
     return result.scalars().all()
 
+@router.get("/my", response_model=list[ItemOut])
+async def list_my_items(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    result = await db.execute(
+        select(Item)
+        .where(Item.donor_id == current_user.id)
+        .order_by(Item.id.desc())
+    )
+    return result.scalars().all()
+
+
+@router.get("/received", response_model=list[ItemOut])
+async def list_received_items(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    q = (
+        select(Item)
+        .join(ItemTransaction, ItemTransaction.item_id == Item.id)
+        .where(
+            ItemTransaction.receiver_id == current_user.id,
+            ItemTransaction.action_type == "checked_out",
+        )
+        .order_by(Item.id.desc())
+    )
+    result = await db.execute(q)
+    return result.scalars().all()
+
 
 @router.get("/{item_id}", response_model=ItemOut)
 async def get_item(item_id: int, db: AsyncSession = Depends(get_db)):
@@ -96,6 +126,7 @@ async def get_item(item_id: int, db: AsyncSession = Depends(get_db)):
     if not item:
         raise HTTPException(status_code=404, detail="물품을 찾을 수 없습니다")
     return item
+
 
 
 @router.patch("/{item_id}/status", response_model=ItemOut)
@@ -131,21 +162,3 @@ async def delete_item(
     if item.donor_id != current_user.id and current_user.role != "admin":
         raise HTTPException(status_code=403, detail="권한이 없습니다")
     await db.delete(item)
-
-
-@router.get("/received", response_model=list[ItemOut])
-async def list_received_items(
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    q = (
-        select(Item)
-        .join(ItemTransaction, ItemTransaction.item_id == Item.id)
-        .where(
-            ItemTransaction.receiver_id == current_user.id,
-            ItemTransaction.action_type == "checked_out",
-        )
-        .order_by(Item.id.desc())
-    )
-    result = await db.execute(q)
-    return result.scalars().all()

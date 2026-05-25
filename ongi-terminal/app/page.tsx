@@ -31,6 +31,10 @@ export default function Home() {
   // Points State (Figma Point metric starts at 3,000P)
   const [userPoints, setUserPoints] = useState<number>(3000);
 
+  const [userRegisteredItems, setUserRegisteredItems] = useState<SharingItem[]>(
+    [],
+  );
+
   // Sharing items dataset (Pre-filled with diverse beautiful options)
   const [items, setItems] = useState<SharingItem[]>([
     {
@@ -141,7 +145,7 @@ export default function Home() {
   useEffect(() => {
     const token = localStorage.getItem("access_token");
     if (!token) return;
-    
+
     // Auto-login session restore
     fetch("http://localhost:8000/users/me", {
       headers: { Authorization: `Bearer ${token}` },
@@ -165,6 +169,51 @@ export default function Home() {
         setIsLoggedIn(false);
       });
   }, []);
+
+  useEffect(() => {
+    const token = localStorage.getItem("access_token");
+    if (!token || !isLoggedIn) return;
+    fetch("http://localhost:8000/items/my", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(async (res) => {
+        if (!res.ok) {
+          const err = await res.json();
+          console.error("내 물품 API 오류:", res.status, err); // ← 정확한 오류 확인
+          return;
+        }
+        return res.json();
+      })
+      .then((data) => {
+        if (!data) return;
+        const mapped = data.map(
+          (item: {
+            id: number;
+            title: string;
+            desc: string;
+            category: string;
+            terminal_id: number;
+            status: string;
+            donor_id: number;
+          }) => ({
+            id: String(item.id),
+            title: item.title,
+            desc: item.desc || "",
+            reportDesc: "",
+            explain: "",
+            location: `터미널 ${item.terminal_id}`,
+            terminalId: String(item.terminal_id),
+            status: "available" as const,
+            category: item.category || "기타",
+            image: "🎁",
+            owner: userProfile.name,
+            createdAt: new Date().toISOString().split("T")[0],
+          }),
+        );
+        setUserRegisteredItems(mapped);
+      })
+      .catch(() => console.error("내 물품 불러오기 실패"));
+  }, [isLoggedIn]);
 
   // Fetch points when login state changes
   useEffect(() => {
@@ -257,9 +306,6 @@ export default function Home() {
   ).length;
   const userReservedItems = items.filter(
     (item) => item.status === "reserved" && item.owner === userProfile.name,
-  );
-  const userRegisteredItems = items.filter(
-    (item) => item.owner === userProfile.name && item.status === "available",
   );
 
   return (
