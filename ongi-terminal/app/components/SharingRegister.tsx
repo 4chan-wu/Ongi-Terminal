@@ -32,7 +32,7 @@ export default function SharingRegister({
   const [reportDesc, setReportDesc] = useState("");
   const [explain, setExplain] = useState("");
   const [category, setCategory] = useState("전자기기");
-  const [terminalId, setTerminalId] = useState("1"); // 1: Cafe, 2: Community Center, 3: Subway
+  const [terminalId, setTerminalId] = useState("123");
   const [imageEmoji, setImageEmoji] = useState("🎁");
 
   // AI Chat states
@@ -108,14 +108,9 @@ export default function SharingRegister({
       setDesc(data.desc || "");
       setReportDesc(data.report_desc || "");
       setExplain(data.explain || "");
-      setTerminalId(data.terminal_id || "1");
+      setTerminalId(data.terminal_id || "123");
 
-      const terminalLabel =
-        data.terminal_id === "2"
-          ? "주민센터 앞"
-          : data.terminal_id === "3"
-            ? "지하철역 앞"
-            : "카페 앞 정거장";
+      const terminalLabel = data.terminal_id === "123" ? "기본 터미널" : data.terminal_id;
 
       const aiResponse = `Gemini가 등록 정보를 작성했습니다.\n\n물품명: ${data.title}\n카테고리: ${data.category}\n터미널: ${terminalLabel}\n\n왼쪽 폼을 검토한 뒤 바로 등록하시면 됩니다.`;
       setChatHistory((prev) => [...prev, { sender: "ai", text: aiResponse }]);
@@ -165,12 +160,6 @@ export default function SharingRegister({
         return;
       }
 
-      const terminalLocations: Record<string, string> = {
-        "1": "카페 앞 정거장",
-        "2": "주민센터 앞 정거장",
-        "3": "지하철역 앞 정거장",
-      };
-
       onRegister({
         title,
         desc,
@@ -178,7 +167,7 @@ export default function SharingRegister({
         explain,
         category,
         terminalId,
-        location: terminalLocations[terminalId] || "카페 앞 정거장",
+        location: terminalId === "123" ? "기본 터미널" : `터미널 ${terminalId}`,
         image: imageEmoji,
       });
 
@@ -300,22 +289,10 @@ export default function SharingRegister({
                 <div className="grid grid-cols-3 gap-3">
                   {[
                     {
-                      id: "1",
-                      label: "카페 앞 정거장",
-                      pin: "1",
+                      id: "123",
+                      label: "기본 터미널",
+                      pin: "123",
                       color: "text-brand-orange",
-                    },
-                    {
-                      id: "2",
-                      label: "주민센터 앞",
-                      pin: "2",
-                      color: "text-brand-green",
-                    },
-                    {
-                      id: "3",
-                      label: "지하철역 앞",
-                      pin: "3",
-                      color: "text-brand-blue",
                     },
                   ].map((term) => (
                     <button
@@ -365,18 +342,6 @@ export default function SharingRegister({
             </div>
 
             <div className="flex gap-4 pt-4 border-t border-brand-orange-light/40">
-              <button
-                type="button"
-                onClick={() => setShowAiHelper(!showAiHelper)}
-                className={`flex-1 flex h-14 items-center justify-center gap-2 rounded-2xl font-bold border transition-all duration-300 ${
-                  showAiHelper
-                    ? "bg-brand-orange/10 border-brand-orange text-brand-orange"
-                    : "bg-white border-brand-orange text-brand-orange hover:bg-brand-orange/5"
-                }`}
-              >
-                <MessageSquare className="h-5 w-5" />
-                AI 추천 글쓰기 도우미 {showAiHelper ? "닫기" : "열기"}
-              </button>
               <button
                 type="submit"
                 className="flex-1 flex h-14 items-center justify-center gap-2 rounded-2xl bg-brand-orange text-lg font-bold text-white shadow-lg shadow-brand-orange/20 hover:bg-brand-orange-hover hover:scale-[1.01] transition-all cursor-pointer"

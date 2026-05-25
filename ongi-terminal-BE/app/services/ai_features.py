@@ -192,12 +192,11 @@ async def generate_sharing_copy(message: str) -> dict:
 - desc는 한 줄 특징으로 15~45자
 - report_desc는 사용감/구성품/흠집 등 특이사항 요약. 없으면 "상태 양호"
 - explain은 구매 시기, 사용 상태, 나눔 이유를 반영한 2~4문장 한국어 설명
-- terminal_id는 반드시 "1", "2", "3" 중 하나
-- 사용자가 장소를 말하지 않으면 terminal_id는 "1"
+- terminal_id는 반드시 "1"을 사용
 - 출력은 JSON만
 
 예시 형식:
-{{"title":"무선 블루투스 이어폰","category":"전자기기","desc":"노이즈 캔슬링이 잘 되고 배터리 상태가 좋은 이어폰","report_desc":"충전 케이스 미세 사용감 있음","explain":"...","terminal_id":"2"}}"""
+{{"title":"무선 블루투스 이어폰","category":"전자기기","desc":"노이즈 캔슬링이 잘 되고 배터리 상태가 좋은 이어폰","report_desc":"충전 케이스 미세 사용감 있음","explain":"...","terminal_id":"123"}}"""
 
     result = await llm_json([{"role": "user", "content": prompt}], max_tokens=1200)
     required_keys = ["title", "category", "desc", "report_desc", "explain", "terminal_id"]
@@ -208,9 +207,7 @@ async def generate_sharing_copy(message: str) -> dict:
     if category not in {"전자기기", "도서", "생활용품", "의류", "기타"}:
         category = "기타"
 
-    terminal_id = str(result.get("terminal_id", "1"))
-    if terminal_id not in {"1", "2", "3"}:
-        terminal_id = "1"
+    terminal_id = "1"
 
     return {
         "title": str(result.get("title", "")).strip(),
