@@ -107,10 +107,13 @@ export default function SharingRegister({
       setDesc(data.desc || "");
       setReportDesc(data.report_desc || "");
       setExplain(data.explain || "");
-      setTerminalId(data.terminal_id || "123");
+      setTerminalId(data.terminal_id || "1");
 
       const terminalLabel =
-        data.terminal_id === "123" ? "기본 터미널" : data.terminal_id;
+        data.terminal_id === "1" ? "카페 앞 터미널" :
+        data.terminal_id === "2" ? "주민센터 터미널" :
+        data.terminal_id === "3" ? "지하철역 터미널" :
+        data.terminal_id;
 
       const aiResponse = `Gemini가 등록 정보를 작성했습니다.\n\n물품명: ${data.title}\n카테고리: ${data.category}\n터미널: ${terminalLabel}\n\n왼쪽 폼을 검토한 뒤 바로 등록하시면 됩니다.`;
       setChatHistory((prev) => [...prev, { sender: "ai", text: aiResponse }]);
@@ -168,7 +171,11 @@ export default function SharingRegister({
         explain,
         category,
         terminalId,
-        location: terminalId === "123" ? "기본 터미널" : `터미널 ${terminalId}`,
+        location: 
+          terminalId === "1" ? "카페 앞 터미널" : 
+          terminalId === "2" ? "주민센터 터미널" : 
+          terminalId === "3" ? "지하철역 터미널" : 
+          `터미널 ${terminalId}`,
         image: imageEmoji,
       });
 
@@ -290,10 +297,19 @@ export default function SharingRegister({
                 <div className="grid grid-cols-3 gap-3">
                   {[
                     {
-                      id: "123",
-                      label: "기본 터미널",
-                      pin: "123",
+                      id: "1",
+                      label: "카페 앞 터미널",
                       color: "text-brand-orange",
+                    },
+                    {
+                      id: "2",
+                      label: "주민센터 터미널",
+                      color: "text-brand-green",
+                    },
+                    {
+                      id: "3",
+                      label: "지하철역 터미널",
+                      color: "text-blue-500",
                     },
                   ].map((term) => (
                     <button
